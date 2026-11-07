@@ -10,6 +10,7 @@ import json
 import sqlite3
 from typing import List, Dict, Any, Optional, Union
 from .profiler import DatasetWrapper, MultiCSVProfiler, HAS_PANDAS, HAS_DUCKDB
+from .epss_weighting import EPSSWeightingConfig, weighted_epss
 
 if HAS_PANDAS:
     import pandas as pd
@@ -152,7 +153,7 @@ class CSVCompareAgent:
         }
 
     def _init_sql(self):
-        """Prepares in-memory SQLite and DuckDB query engines."""
+        """Prepares in-memory SQLite and DuckDB query engines with EPSS functions."""
         if HAS_DUCKDB and self._duckdb_conn is None:
             self._duckdb_conn = duckdb.connect(database=":memory:")
             for name, ds in self.datasets.items():
@@ -164,10 +165,112 @@ class CSVCompareAgent:
 
         if self._sqlite_conn is None:
             self._sqlite_conn = sqlite3.connect(":memory:")
+            # Register EPSS functions
+            self._sqlite_conn.create_function(
+                "weighted_epss", 2, lambda epss, month: weighted_epss(epss, month)
+            )
+            self._sqlite_conn.create_function(
+                "epss_version", 1, lambda month: "v4" if str(month).strip()[:7] >= "2025-03" else "pre-v4"
+            )
             for name, ds in self.datasets.items():
                 tbl = self._sanitize_table_name(name)
                 if HAS_PANDAS and ds.df is not None:
                     ds.df.to_sql(tbl, self._sqlite_conn, index=False, if_exists="replace")
+
+    def compare_epss(
+        self,
+        dataset_a: Optional[str] = None,
+        dataset_b: Optional[str] = None,
+        pre_v4_weight: float = 0.6,
+        v4_release_month: str = "2025-03"
+    ) -> Dict[str, Any]:
+        """
+        Specialized comparative analysis for EPSS scores across datasets,
+        weighting pre-EPSS v4 values less than EPSS v4 values.
+        """
+        config = EPSSWeightingConfig(
+            v4_release_month=v4_release_month,
+            pre_v4_weight=pre_v4_weight
+        )
+        names = list(self.datasets.keys())
+        if len(names) < 2:
+            raise ValueError("Need at least 2 datasets to compare EPSS.")
+
+        name_a = dataset_a or names[0]
+        name_b = dataset_b or names[1]
+
+        results = {
+            "config": {
+                "v4_release_month": v4_release_month,
+                "pre_v4_weight": pre_v4_weight,
+                "v4_weight": 1.0,
+            },
+            "datasets": {}
+        }
+
+        for n in [name_a, name_b]:
+            ds = self.datasets[n]
+            date_col = next((c for c in ds.headers if c in ("month", "snapshot_month", "date")), None)
+            epss_col = next((c for c in ds.headers if c.lower() == "epss"), None)
+
+            if not epss_col:
+                results["datasets"][n] = {"error": "No EPSS column found"}
+                continue
+
+            # Read sample or full metrics
+            pre_v4_count = 0
+            v4_count = 0
+            unweighted_scores = []
+            weighted_scores = []
+
+            # If pandas available
+            if HAS_PANDAS and ds.df is not None:
+                for _, row in ds.df[[date_col, epss_col]].dropna().iterrows():
+                    d = str(row[date_col])
+                    val = float(row[epss_col])
+                    w = config.get_weight(d)
+                    if config.is_v4_or_later(d):
+                        v4_count += 1
+                    else:
+                        pre_v4_count += 1
+                    unweighted_scores.append(val)
+                    weighted_scores.append(val * w)
+            else:
+                # Fallback to standard library reading
+                import csv
+                with open(ds.file_path, "r", encoding="utf-8", errors="replace") as f:
+                    reader = csv.DictReader(f)
+                    for i, row in enumerate(reader):
+                        d = row.get(date_col, "")
+                        val_str = row.get(epss_col, "")
+                        try:
+                            val = float(val_str)
+                            w = config.get_weight(d)
+                            if config.is_v4_or_later(d):
+                                v4_count += 1
+                            else:
+                                pre_v4_count += 1
+                            unweighted_scores.append(val)
+                            weighted_scores.append(val * w)
+                        except (ValueError, TypeError):
+                            pass
+                        if i > 100000:
+                            break
+
+            avg_unweighted = sum(unweighted_scores) / max(1, len(unweighted_scores))
+            avg_weighted = sum(weighted_scores) / max(1, len(weighted_scores))
+
+            results["datasets"][n] = {
+                "date_column": date_col,
+                "total_records_analyzed": len(unweighted_scores),
+                "pre_v4_records": pre_v4_count,
+                "v4_records": v4_count,
+                "mean_raw_epss": round(avg_unweighted, 5),
+                "mean_weighted_epss": round(avg_weighted, 5),
+                "weight_discount_impact": round(avg_unweighted - avg_weighted, 5)
+            }
+
+        return results
 
     def sql(self, query: str) -> List[Dict[str, Any]]:
         """
@@ -233,6 +336,21 @@ class CSVCompareAgent:
                 lines.append("\n**Sample Modifications:**")
                 for item in sample_mod[:3]:
                     lines.append(f"  - Key `{item['key']}`: {item['changes']}")
+            return "\n".join(lines)
+
+        if "epss" in q or "v4" in q or "weight" in q:
+            epss_res = self.compare_epss(a, b)
+            cfg = epss_res["config"]
+            lines = [
+                f"**EPSS Version-Aware Comparison (`{a}` vs `{b}`):**",
+                f"- **EPSS v4 Cutoff:** `{cfg['v4_release_month']}` | Pre-v4 Weight: `{cfg['pre_v4_weight']}` | v4 Weight: `{cfg['v4_weight']}`",
+            ]
+            for ds_name, info in epss_res["datasets"].items():
+                if "error" not in info:
+                    lines.append(
+                        f"- `{ds_name}`: Raw Mean={info['mean_raw_epss']}, Weighted Mean={info['mean_weighted_epss']} "
+                        f"(Pre-v4 rows: {info['pre_v4_records']}, v4+ rows: {info['v4_records']})"
+                    )
             return "\n".join(lines)
 
         if "stat" in q or "drift" in q or "mean" in q or "average" in q:
@@ -322,6 +440,24 @@ class CSVCompareAgent:
                     lines.append(f"| `{col}` | Numeric | {item['mean_a']} | {item['mean_b']} | {item['mean_delta']:+0.2f} | {item['null_pct_a']}% -> {item['null_pct_b']}% |")
                 else:
                     lines.append(f"| `{col}` | Categorical | {item['unique_count_a']} uniques | {item['unique_count_b']} uniques | New: {item['new_categories_in_b']} | {item['null_pct_a']}% -> {item['null_pct_b']}% |")
+
+        # Check for EPSS columns and include EPSS v4 weighting analysis
+        has_epss = any("epss" in [h.lower() for h in ds.headers] for ds in [self.datasets[a], self.datasets[b]])
+        if has_epss:
+            epss_data = self.compare_epss(a, b)
+            cfg = epss_data["config"]
+            lines.extend([
+                f"\n## 5. EPSS Version Weighting Analysis (EPSS v4 Policy)\n",
+                f"> [!IMPORTANT]",
+                f"> Any values recorded prior to EPSS v4 release (`<{cfg['v4_release_month']}`) are weighted at `{cfg['pre_v4_weight']}`, whereas EPSS v4 values are weighted at `{cfg['v4_weight']}`.\n",
+                f"| Dataset | Date Field | Pre-v4 Records | v4+ Records | Raw Mean EPSS | Weighted Mean EPSS |",
+                f"| :--- | :--- | :--- | :--- | :--- | :--- |"
+            ])
+            for ds_name, info in epss_data["datasets"].items():
+                if "error" not in info:
+                    lines.append(
+                        f"| `{ds_name}` | `{info['date_column']}` | {info['pre_v4_records']} | {info['v4_records']} | {info['mean_raw_epss']} | **{info['mean_weighted_epss']}** |"
+                    )
 
         report_md = "\n".join(lines)
 
