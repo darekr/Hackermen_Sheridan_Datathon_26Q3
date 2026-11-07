@@ -221,10 +221,23 @@ Assess the real-world attack plane for:
                 except ValueError:
                     raw_epss = 0.0
 
-                month = row.get("snapshot_month", "2026-03")
+                month = row.get("snapshot_month", "2026-03").strip()
+                pub = row.get("published", "").strip()
+
+                # Rule: anywhere the publish date is after the snapshot_month value, assume the snapshot data instead
+                if pub and month and (pub > month or pub[:7] > month):
+                    effective_date = month
+                    assumed_snapshot_data = True
+                else:
+                    effective_date = pub or month
+                    assumed_snapshot_data = False
+
                 scoreboard[cve] = {
                     "raw_epss": raw_epss,
                     "month": month,
+                    "published": pub,
+                    "effective_date": effective_date,
+                    "assumed_snapshot_data": assumed_snapshot_data,
                     "exploitdb": int(row.get("exploitdb") or 0),
                     "metasploit": int(row.get("metasploit") or 0),
                     "poc_github": int(row.get("poc_github") or 0)
@@ -337,6 +350,10 @@ Assess the real-world attack plane for:
                     "sample_affected_vendors": "; ".join(vendors_list[:5]) if vendors_list else "Not Specified",
                     "sample_affected_products": "; ".join(products_list[:6]) if products_list else "Not Specified",
                     "attack_plane_scope": attack_plane,
+                    "published_date": sc.get("published", ""),
+                    "snapshot_month": sc.get("month", ""),
+                    "effective_date": sc.get("effective_date", ""),
+                    "assumed_snapshot_data": sc.get("assumed_snapshot_data", False),
                     "description": row.get("description", "")[:200]
                 })
 
@@ -390,6 +407,10 @@ Assess the real-world attack plane for:
             "sample_affected_vendors",
             "sample_affected_products",
             "attack_plane_scope",
+            "published_date",
+            "snapshot_month",
+            "effective_date",
+            "assumed_snapshot_data",
             "granite_attack_plane_assessment"
         ]
 

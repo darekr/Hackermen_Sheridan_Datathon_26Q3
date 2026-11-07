@@ -1,10 +1,12 @@
 """
 Dashboard Generator for Top 500 and Unpublished Vulnerabilities.
 Produces an interactive, standalone HTML dashboard with Tailwind CSS.
-Focuses on:
-1. Likelihood of Exploitation (EPSS v4, weaponization telemetry)
-2. Attack Surface & Attack Plane (Attack Matrix Size, affected vendors/products)
-3. Dedicated section for Unpublished/Pre-Analysis vulnerabilities (NVD Deferred/Awaiting Analysis)
+Features:
+1. Top-order filter to select between entries With and Without EPSS values.
+2. Rule: anywhere the publish date is after the snapshot_month value, assume the snapshot data instead.
+3. Likelihood of Exploitation focus (EPSS v4, weaponization telemetry).
+4. Attack Surface & Attack Plane focus (Attack Matrix Size, affected vendors/products).
+5. Dedicated section for Unpublished/Pre-Analysis vulnerabilities (NVD Deferred/Awaiting Analysis).
 """
 
 import os
@@ -21,6 +23,17 @@ def load_top500(csv_path: str = "top500.csv") -> List[Dict[str, Any]]:
     with open(csv_path, "r", encoding="utf-8") as f:
         reader = csv.DictReader(f)
         for r in reader:
+            pub = r.get("published_date") or r.get("published") or ""
+            snap = r.get("snapshot_month") or "2026-03"
+
+            # Rule: anywhere the publish date is after the snapshot_month value, assume the snapshot data instead
+            if pub and snap and (pub > snap or pub[:7] > snap):
+                effective_date = snap
+                assumed_snapshot = True
+            else:
+                effective_date = pub or snap
+                assumed_snapshot = False
+
             rows.append({
                 "rank": int(r.get("rank") or 0),
                 "cve_id": r.get("cve_id", ""),
@@ -39,6 +52,10 @@ def load_top500(csv_path: str = "top500.csv") -> List[Dict[str, Any]]:
                 "sample_affected_vendors": r.get("sample_affected_vendors", ""),
                 "sample_affected_products": r.get("sample_affected_products", ""),
                 "attack_plane_scope": r.get("attack_plane_scope", ""),
+                "published_date": pub,
+                "snapshot_month": snap,
+                "effective_date": effective_date,
+                "assumed_snapshot_data": assumed_snapshot,
                 "granite_assessment": r.get("granite_attack_plane_assessment", "")
             })
     return rows
@@ -65,8 +82,23 @@ def load_unpublished(
             for r in csv.DictReader(f):
                 cve = r.get("cve_id", "").strip().upper()
                 raw_epss = float(r.get("epss") or 0.0)
+                pub = r.get("published", "").strip()
+                snap = r.get("snapshot_month", "2026-03").strip()
+
+                # Rule: anywhere the publish date is after the snapshot_month value, assume the snapshot data instead
+                if pub and snap and (pub > snap or pub[:7] > snap):
+                    effective_date = snap
+                    assumed_snapshot = True
+                else:
+                    effective_date = pub or snap
+                    assumed_snapshot = False
+
                 scoreboard[cve] = {
                     "raw_epss": raw_epss,
+                    "published": pub,
+                    "snapshot_month": snap,
+                    "effective_date": effective_date,
+                    "assumed_snapshot_data": assumed_snapshot,
                     "metasploit": int(r.get("metasploit") or 0),
                     "exploitdb": int(r.get("exploitdb") or 0),
                     "poc_github": int(r.get("poc_github") or 0)
@@ -131,6 +163,10 @@ def load_unpublished(
                         "affected_products_count": p_cnt,
                         "sample_affected_vendors": "; ".join(list(p_info["vendors"])[:4]) if p_info["vendors"] else "Pre-disclosure / Unlisted",
                         "sample_affected_products": "; ".join(list(p_info["products"])[:4]) if p_info["products"] else "Pre-disclosure / Unlisted",
+                        "published_date": sc["published"],
+                        "snapshot_month": sc["snapshot_month"],
+                        "effective_date": sc["effective_date"],
+                        "assumed_snapshot_data": sc["assumed_snapshot_data"],
                         "description": r.get("description", "")[:180]
                     })
 
@@ -174,13 +210,14 @@ def generate_html_dashboard(
     .badge-low {{ background-color: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.4); }}
     .badge-info {{ background-color: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4); }}
     .badge-unpub {{ background-color: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.4); }}
+    .badge-assumed {{ background-color: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); }}
   </style>
 </head>
 <body class="p-4 md:p-8">
 
   <!-- Header -->
-  <div class="max-w-7xl mx-auto mb-8">
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-800 pb-6">
+  <div class="max-w-7xl mx-auto mb-6">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-800 pb-5">
       <div>
         <div class="flex items-center gap-3">
           <span class="px-2.5 py-1 text-xs font-semibold rounded-md bg-blue-900/60 text-blue-400 border border-blue-700/50">IBM Granite 4:3B Intelligence</span>
@@ -190,23 +227,50 @@ def generate_html_dashboard(
         <p class="text-sm text-gray-400 mt-1">Multi-factor intelligence evaluating Likelihood of Exploitation (EPSS v4), Attack Surface Footprint, and Pre-Analysis Zero-Days.</p>
       </div>
       <div class="flex items-center gap-2">
-        <button onclick="exportCSV()" class="px-3 py-2 text-xs font-medium rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-200 transition">
+        <button onclick="exportCSV()" class="px-3.5 py-2 text-xs font-medium rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-200 transition">
           Export Filtered CSV
         </button>
       </div>
     </div>
 
+    <!-- TOP-ORDER TELEMETRY FILTER: With vs Without EPSS Values -->
+    <div class="mt-6 p-4 rounded-xl bg-gradient-to-r from-gray-900 via-gray-900/95 to-blue-950/40 border border-blue-800/40 shadow-lg">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wider bg-blue-500/20 text-blue-400 border border-blue-500/30">Top Order Filter</span>
+            <span class="text-sm font-semibold text-white">EPSS Exploitation Telemetry Selection</span>
+          </div>
+          <p class="text-xs text-gray-400 mt-0.5">Toggle between vulnerabilities with active scoreboard EPSS scores and entries without scoreboard EPSS data.</p>
+        </div>
+        <div class="inline-flex rounded-lg bg-gray-800/90 p-1 border border-gray-700 shadow-inner">
+          <button id="epss-btn-all" onclick="setEPSSFilter('all')" class="px-3.5 py-1.5 text-xs font-bold rounded-md bg-blue-600 text-white shadow transition flex items-center gap-1.5">
+            <span>All Entries</span>
+            <span id="badge-count-all" class="text-[10px] bg-blue-900/90 px-1.5 py-0.5 rounded font-mono text-blue-200">500</span>
+          </button>
+          <button id="epss-btn-with" onclick="setEPSSFilter('with')" class="px-3.5 py-1.5 text-xs font-medium rounded-md text-emerald-400 hover:text-white hover:bg-gray-700 transition flex items-center gap-1.5">
+            <span>With EPSS Values</span>
+            <span id="badge-count-with" class="text-[10px] bg-emerald-950 px-1.5 py-0.5 rounded font-mono text-emerald-300">498</span>
+          </button>
+          <button id="epss-btn-without" onclick="setEPSSFilter('without')" class="px-3.5 py-1.5 text-xs font-medium rounded-md text-amber-400 hover:text-white hover:bg-gray-700 transition flex items-center gap-1.5">
+            <span>Without EPSS Values (EPSS = 0)</span>
+            <span id="badge-count-without" class="text-[10px] bg-amber-950 px-1.5 py-0.5 rounded font-mono text-amber-300">2</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- KPI Summary Cards -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-5">
       <div class="p-4 rounded-xl bg-gray-900/80 border border-gray-800 shadow-sm">
         <div class="text-xs font-medium text-gray-400 uppercase tracking-wider">Top Targets Analyzed</div>
         <div class="text-2xl font-bold text-white mt-1">500</div>
         <div class="text-xs text-blue-400 mt-1">Ranked from 72,670 scoreboard CVEs</div>
       </div>
       <div class="p-4 rounded-xl bg-gray-900/80 border border-gray-800 shadow-sm">
-        <div class="text-xs font-medium text-gray-400 uppercase tracking-wider">Active Exploitation Rate</div>
-        <div class="text-2xl font-bold text-amber-400 mt-1" id="stat-active-rate">99.6%</div>
-        <div class="text-xs text-gray-400 mt-1">EPSS &gt; 0 with telemetry telemetry</div>
+        <div class="text-xs font-medium text-gray-400 uppercase tracking-wider">Active Telemetry Rate</div>
+        <div class="text-2xl font-bold text-emerald-400 mt-1" id="stat-active-rate">99.6%</div>
+        <div class="text-xs text-gray-400 mt-1">EPSS &gt; 0 with version weighting</div>
       </div>
       <div class="p-4 rounded-xl bg-gray-900/80 border border-gray-800 shadow-sm">
         <div class="text-xs font-medium text-gray-400 uppercase tracking-wider">Mean Attack Matrix Size</div>
@@ -221,7 +285,7 @@ def generate_html_dashboard(
     </div>
 
     <!-- Navigation Tabs & Search Controls -->
-    <div class="mt-8 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gray-900/60 p-3 rounded-xl border border-gray-800">
+    <div class="mt-6 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gray-900/70 p-3 rounded-xl border border-gray-800">
       <div class="flex items-center gap-2 overflow-x-auto">
         <button id="tab-all" onclick="setTab('all')" class="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-blue-600 text-white transition">All Top 500</button>
         <button id="tab-exploit" onclick="setTab('exploit')" class="px-3.5 py-1.5 text-xs font-medium rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition">Exploitation Likelihood Focus</button>
@@ -253,6 +317,7 @@ def generate_html_dashboard(
             <tr>
               <th class="py-3 px-3">Rank</th>
               <th class="py-3 px-3">CVE Identifier</th>
+              <th class="py-3 px-3">Effective Date</th>
               <th class="py-3 px-3">Threat Index</th>
               <th class="py-3 px-3">Exploitation Likelihood (EPSS)</th>
               <th class="py-3 px-3">Attack Surface Matrix</th>
@@ -283,6 +348,40 @@ def generate_html_dashboard(
     const unpublishedData = {unpublished_json};
 
     let currentTab = 'all';
+    let epssFilter = 'all'; // 'all', 'with', 'without'
+
+    function updateFilterCounts() {{
+      const base = (currentTab === 'unpub') ? unpublishedData : top500Data;
+      const total = base.length;
+      const withCount = base.filter(x => x.epss_score > 0).length;
+      const withoutCount = total - withCount;
+
+      document.getElementById('badge-count-all').innerText = total;
+      document.getElementById('badge-count-with').innerText = withCount;
+      document.getElementById('badge-count-without').innerText = withoutCount;
+    }}
+
+    function setEPSSFilter(filter) {{
+      epssFilter = filter;
+      const btnAll = document.getElementById('epss-btn-all');
+      const btnWith = document.getElementById('epss-btn-with');
+      const btnWithout = document.getElementById('epss-btn-without');
+
+      // Reset
+      btnAll.className = 'px-3.5 py-1.5 text-xs font-medium rounded-md text-gray-400 hover:text-white hover:bg-gray-700 transition flex items-center gap-1.5';
+      btnWith.className = 'px-3.5 py-1.5 text-xs font-medium rounded-md text-emerald-400 hover:text-white hover:bg-gray-700 transition flex items-center gap-1.5';
+      btnWithout.className = 'px-3.5 py-1.5 text-xs font-medium rounded-md text-amber-400 hover:text-white hover:bg-gray-700 transition flex items-center gap-1.5';
+
+      if (filter === 'all') {{
+        btnAll.className = 'px-3.5 py-1.5 text-xs font-bold rounded-md bg-blue-600 text-white shadow transition flex items-center gap-1.5';
+      }} else if (filter === 'with') {{
+        btnWith.className = 'px-3.5 py-1.5 text-xs font-bold rounded-md bg-emerald-600 text-white shadow transition flex items-center gap-1.5';
+      }} else if (filter === 'without') {{
+        btnWithout.className = 'px-3.5 py-1.5 text-xs font-bold rounded-md bg-amber-600 text-white shadow transition flex items-center gap-1.5';
+      }}
+
+      renderTable();
+    }}
 
     function setTab(tab) {{
       currentTab = tab;
@@ -306,6 +405,7 @@ def generate_html_dashboard(
         notice.innerHTML = '<span class="text-purple-400 font-semibold">[SEPARATE SECTION]</span> Displaying Unpublished & Deferred Vulnerabilities (NVD Deferred / Awaiting Analysis / Zero-Telemetry) scored against the identical composite metric.';
       }}
 
+      updateFilterCounts();
       renderTable();
     }}
 
@@ -319,7 +419,7 @@ def generate_html_dashboard(
 
     function getEPSSBadge(score, status) {{
       if (score === 0 || (status && status.includes('No information'))) {{
-        return '<div class="flex flex-col"><span class="text-gray-400 font-mono font-medium">0.0000</span><span class="text-[10px] text-gray-500">No Scoreboard Info</span></div>';
+        return '<div class="flex flex-col"><span class="text-amber-400/90 font-mono font-medium">0.0000</span><span class="text-[10px] text-amber-400/80 font-medium">No Scoreboard Info</span></div>';
       }}
       let colorClass = 'text-emerald-400';
       if (score > 0.5) colorClass = 'text-rose-400 font-bold';
@@ -333,12 +433,21 @@ def generate_html_dashboard(
 
       let source = (currentTab === 'unpub') ? [...unpublishedData] : [...top500Data];
 
+      // Apply Top-Order EPSS Filter
+      if (epssFilter === 'with') {{
+        source = source.filter(x => x.epss_score > 0);
+      }} else if (epssFilter === 'without') {{
+        source = source.filter(x => x.epss_score === 0 || (x.epss_status && x.epss_status.includes('No information')));
+      }}
+
+      // Apply Secondary Tab Focus
       if (currentTab === 'exploit') {{
         source = source.filter(x => x.epss_score > 0.05);
       }} else if (currentTab === 'surface') {{
         source = source.filter(x => x.attack_matrix_size > 6.0);
       }}
 
+      // Apply Search Filter
       if (q) {{
         source = source.filter(x => {{
           return (x.cve_id && x.cve_id.toLowerCase().includes(q)) ||
@@ -363,7 +472,7 @@ def generate_html_dashboard(
       tbody.innerHTML = '';
 
       if (source.length === 0) {{
-        tbody.innerHTML = '<tr><td colspan="8" class="text-center py-8 text-gray-500">No vulnerabilities matched current filters.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" class="text-center py-8 text-gray-500">No vulnerabilities matched current filters.</td></tr>';
         return;
       }}
 
@@ -374,11 +483,22 @@ def generate_html_dashboard(
         const isUnpub = (currentTab === 'unpub');
         const rankText = isUnpub ? ('U-' + (idx + 1)) : ('#' + (row.rank || (idx + 1)));
 
+        // Date Display with rule indicator
+        const dateDisplay = `
+          <div class="flex flex-col">
+            <span class="font-mono text-gray-300">${{row.effective_date || row.snapshot_month || 'N/A'}}</span>
+            ${{row.assumed_snapshot_data ? '<span class="text-[9px] badge-assumed px-1 py-0.2 rounded font-semibold mt-0.5">Snapshot Date Assumed</span>' : '<span class="text-[9px] text-gray-500">Published</span>'}}
+          </div>
+        `;
+
         tr.innerHTML = `
           <td class="py-3 px-3 text-gray-400 font-mono">${{rankText}}</td>
           <td class="py-3 px-3">
             <div class="font-bold text-blue-400 hover:text-blue-300 cursor-pointer" onclick="openModal('${{row.cve_id}}', ${{isUnpub}})">${{row.cve_id}}</div>
             <div class="text-[10px] text-gray-400">${{isUnpub ? '<span class="badge-unpub px-1.5 py-0.2 rounded font-semibold">' + row.nvd_status + '</span>' : row.attack_plane_scope}}</div>
+          </td>
+          <td class="py-3 px-3">
+            ${{dateDisplay}}
           </td>
           <td class="py-3 px-3">
             <div class="flex items-center gap-2">
@@ -396,11 +516,11 @@ def generate_html_dashboard(
           </td>
           <td class="py-3 px-3">
             <div class="font-mono text-gray-200 font-semibold">${{row.cwe_id}}</div>
-            <div class="text-[10px] text-gray-400 truncate max-w-[160px]">${{row.cwe_name}}</div>
+            <div class="text-[10px] text-gray-400 truncate max-w-[150px]">${{row.cwe_name}}</div>
           </td>
           <td class="py-3 px-3">
-            <div class="text-gray-300 font-medium truncate max-w-[180px]">${{row.sample_affected_vendors}}</div>
-            <div class="text-[10px] text-gray-500 truncate max-w-[180px]">${{row.sample_affected_products}}</div>
+            <div class="text-gray-300 font-medium truncate max-w-[170px]">${{row.sample_affected_vendors}}</div>
+            <div class="text-[10px] text-gray-500 truncate max-w-[170px]">${{row.sample_affected_products}}</div>
           </td>
           <td class="py-3 px-3 text-right">
             <button onclick="openModal('${{row.cve_id}}', ${{isUnpub}})" class="px-2.5 py-1 text-[11px] rounded bg-gray-800 hover:bg-gray-700 text-blue-400 border border-gray-700 transition">
@@ -432,11 +552,11 @@ def generate_html_dashboard(
           <div class="text-xs text-gray-400 mt-1">${{item.cwe_id}}: ${{item.cwe_name}}</div>
         </div>
 
-        <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-2.5 mb-4">
           <div class="p-2.5 bg-gray-800/60 rounded border border-gray-700">
             <div class="text-[10px] text-gray-400 uppercase">CVSS Base Score</div>
             <div class="text-base font-bold text-white mt-0.5">${{item.cvss3_score}}</div>
-            <div class="text-[10px] text-gray-400">${{item.attack_vector}} Attack Vector</div>
+            <div class="text-[10px] text-gray-400">${{item.attack_vector}} Vector</div>
           </div>
           <div class="p-2.5 bg-gray-800/60 rounded border border-gray-700">
             <div class="text-[10px] text-gray-400 uppercase">EPSS Exploitation</div>
@@ -447,6 +567,11 @@ def generate_html_dashboard(
             <div class="text-[10px] text-gray-400 uppercase">Attack Matrix Size</div>
             <div class="text-base font-bold text-purple-400 font-mono mt-0.5">${{item.attack_matrix_size}}</div>
             <div class="text-[10px] text-gray-400">${{item.affected_vendors_count}} Vendors / ${{item.affected_products_count}} Products</div>
+          </div>
+          <div class="p-2.5 bg-gray-800/60 rounded border border-gray-700">
+            <div class="text-[10px] text-gray-400 uppercase">Effective Date</div>
+            <div class="text-sm font-bold text-blue-400 font-mono mt-0.5">${{item.effective_date || item.snapshot_month}}</div>
+            <div class="text-[10px] text-gray-400">${{item.assumed_snapshot_data ? 'Assumed from snapshot' : 'Published date'}}</div>
           </div>
         </div>
 
@@ -475,7 +600,13 @@ def generate_html_dashboard(
     }}
 
     function exportCSV() {{
-      const rows = (currentTab === 'unpub') ? unpublishedData : top500Data;
+      const base = (currentTab === 'unpub') ? unpublishedData : top500Data;
+      let rows = [...base];
+      if (epssFilter === 'with') {{
+        rows = rows.filter(x => x.epss_score > 0);
+      }} else if (epssFilter === 'without') {{
+        rows = rows.filter(x => x.epss_score === 0 || (x.epss_status && x.epss_status.includes('No information')));
+      }}
       if (!rows.length) return;
       const headers = Object.keys(rows[0]);
       const csvContent = "data:text/csv;charset=utf-8," + 
@@ -489,7 +620,8 @@ def generate_html_dashboard(
       document.body.removeChild(link);
     }}
 
-    // Initial render
+    // Initial render & counts
+    updateFilterCounts();
     renderTable();
   </script>
 </body>
@@ -521,4 +653,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
