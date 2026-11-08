@@ -1,0 +1,165 @@
+{
+  "pool_2024_2025_size": 87020,
+  "total_future_kev_2024_2025": 118,
+  "pre_pub_kev_excluded_2024_2025": 14,
+  "out_of_time_test_kev_total": 91,
+  "periods": [
+    {
+      "period": "2024-Q3 (Jul\u2013Sep 2024)",
+      "train_months": "2024-01..2024-06",
+      "test_pool_size": 8440,
+      "total_future_kev": 18,
+      "k_scaled": 58,
+      "scaled_top500_caught": {
+        "cvss_first": 0,
+        "epss_first": 2,
+        "exploit_then_epss": 3,
+        "readable_score": 6,
+        "our_model": 4,
+        "strict_no_cvss": 4
+      },
+      "raw_top500_caught": {
+        "cvss_first": 0,
+        "epss_first": 3,
+        "exploit_then_epss": 6,
+        "readable_score": 8,
+        "our_model": 9,
+        "strict_no_cvss": 11
+      }
+    },
+    {
+      "period": "2024-Q4 (Oct\u2013Dec 2024)",
+      "train_months": "2024-01..2024-09",
+      "test_pool_size": 11000,
+      "total_future_kev": 21,
+      "k_scaled": 76,
+      "scaled_top500_caught": {
+        "cvss_first": 0,
+        "epss_first": 2,
+        "exploit_then_epss": 3,
+        "readable_score": 5,
+        "our_model": 5,
+        "strict_no_cvss": 5
+      },
+      "raw_top500_caught": {
+        "cvss_first": 0,
+        "epss_first": 2,
+        "exploit_then_epss": 5,
+        "readable_score": 5,
+        "our_model": 7,
+        "strict_no_cvss": 7
+      }
+    },
+    {
+      "period": "2025-Q1 (Jan\u2013Mar 2025, EPSS v4 shift)",
+      "train_months": "2024-01..2024-12",
+      "test_pool_size": 12139,
+      "total_future_kev": 18,
+      "k_scaled": 84,
+      "scaled_top500_caught": {
+        "cvss_first": 1,
+        "epss_first": 3,
+        "exploit_then_epss": 3,
+        "readable_score": 5,
+        "our_model": 5,
+        "strict_no_cvss": 5
+      },
+      "raw_top500_caught": {
+        "cvss_first": 3,
+        "epss_first": 7,
+        "exploit_then_epss": 6,
+        "readable_score": 7,
+        "our_model": 13,
+        "strict_no_cvss": 13
+      }
+    },
+    {
+      "period": "2025-Q2 (Apr\u2013Jun 2025, Post-v4)",
+      "train_months": "2024-01..2025-03",
+      "test_pool_size": 11942,
+      "total_future_kev": 17,
+      "k_scaled": 82,
+      "scaled_top500_caught": {
+        "cvss_first": 2,
+        "epss_first": 6,
+        "exploit_then_epss": 9,
+        "readable_score": 10,
+        "our_model": 10,
+        "strict_no_cvss": 11
+      },
+      "raw_top500_caught": {
+        "cvss_first": 2,
+        "epss_first": 9,
+        "exploit_then_epss": 12,
+        "readable_score": 12,
+        "our_model": 12,
+        "strict_no_cvss": 12
+      }
+    },
+    {
+      "period": "2025-H2 (Jul\u2013Dec 2025, Latest)",
+      "train_months": "2024-01..2025-06",
+      "test_pool_size": 23688,
+      "total_future_kev": 17,
+      "k_scaled": 163,
+      "scaled_top500_caught": {
+        "cvss_first": 1,
+        "epss_first": 2,
+        "exploit_then_epss": 5,
+        "readable_score": 5,
+        "our_model": 6,
+        "strict_no_cvss": 7
+      },
+      "raw_top500_caught": {
+        "cvss_first": 2,
+        "epss_first": 3,
+        "exploit_then_epss": 6,
+        "readable_score": 7,
+        "our_model": 7,
+        "strict_no_cvss": 7
+      }
+    }
+  ],
+  "sum_scaled_top500_caught": {
+    "cvss_first": 4,
+    "epss_first": 15,
+    "exploit_then_epss": 23,
+    "readable_score": 31,
+    "our_model": 30,
+    "strict_no_cvss": 32
+  },
+  "sum_raw_top500_caught": {
+    "cvss_first": 7,
+    "epss_first": 24,
+    "exploit_then_epss": 35,
+    "readable_score": 39,
+    "our_model": 48,
+    "strict_no_cvss": 50
+  },
+  "pooled_top500_caught": {
+    "cvss_first": 4,
+    "epss_first": 14,
+    "exploit_then_epss": 24,
+    "readable_score": 30,
+    "our_model": 29,
+    "strict_no_cvss": 30
+  },
+  "feature_correlations_with_future_kev": {
+    "nuclei": 0.1288,
+    "exploit_flag_count": 0.1249,
+    "epss_pre_v4": 0.1041,
+    "epss_x_exploit": 0.1005,
+    "epss": 0.0997,
+    "has_any_exploit": 0.0936,
+    "poc_github": 0.0843,
+    "log_epss": 0.0601,
+    "epss_x_v4": 0.0569,
+    "metasploit": 0.0502,
+    "is_unauthenticated": 0.0373,
+    "exploitdb": 0.0368,
+    "prior_kev_sim_top5": 0.0292,
+    "edge_x_unauth_or_rce": 0.0291,
+    "atk_auth_bypass": 0.0254
+  },
+  "elapsed_seconds": 730.64
+}

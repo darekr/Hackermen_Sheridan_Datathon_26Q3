@@ -1,0 +1,373 @@
+{
+  "CVE-2026-8037": {
+    "vendor": "progress",
+    "product": "API in Progress ADC Products",
+    "internet_facing": true,
+    "attack_type": "RCE/AuthBypass/Injection",
+    "explanation": "Predicted KEV Risk Score 81.89/100: Ranked high because vendor 'progress' has 8 prior KEV entries before snapshot (4 tied to ransomware); internet-facing edge/network target (API in Progress ADC Products); description indicates remote code execution + command injection; public exploit artifacts exist (Nuclei template, GitHub PoC); EPSS v4 = 0.84793; description similarity 0.93 to prior KEV CVE-2019-7256."
+  },
+  "CVE-2026-20251": {
+    "vendor": "cisco",
+    "product": "In Splunk Enterprise",
+    "internet_facing": true,
+    "attack_type": "RCE/AuthBypass/Injection",
+    "explanation": "Predicted KEV Risk Score 52.48/100: Ranked high because vendor 'cisco' has 82 prior KEV entries before snapshot (5 tied to ransomware); internet-facing edge/network target (In Splunk Enterprise); description indicates remote code execution + deserialization; public exploit artifacts exist (GitHub PoC); EPSS v4 = 0.18991; vendor/CNA CVSS = 8.8; description similarity 0.92 to prior KEV CVE-2022-47966."
+  },
+  "CVE-2026-71362": {
+    "vendor": "adobe",
+    "product": "Software Component",
+    "internet_facing": false,
+    "attack_type": "General Vulnerability",
+    "explanation": "Predicted KEV Risk Score 76.08/100: Ranked high because vendor 'adobe' has 76 prior KEV entries before snapshot (11 tied to ransomware); public exploit artifacts exist (Nuclei template, GitHub PoC); EPSS v4 = 0.25136; vendor/CNA CVSS = 9.1; description similarity 0.71 to prior KEV CVE-2023-29298."
+  },
+  "CVE-2026-39808": {
+    "vendor": "fortinet",
+    "product": "Fortinet FortiSandbox",
+    "internet_facing": false,
+    "attack_type": "RCE/AuthBypass/Injection",
+    "explanation": "Predicted KEV Risk Score 58.63/100: Ranked high because vendor 'fortinet' has 23 prior KEV entries before snapshot (14 tied to ransomware); description indicates command injection; public exploit artifacts exist (Nuclei template, GitHub PoC); EPSS v4 = 0.13099; vendor/CNA CVSS = 9.8; description similarity 0.94 to prior KEV CVE-2025-58034."
+  },
+  "CVE-2026-2699": {
+    "vendor": "progress",
+    "product": "Software Component",
+    "internet_facing": false,
+    "attack_type": "RCE/AuthBypass/Injection",
+    "explanation": "Predicted KEV Risk Score 60.47/100: Ranked high because vendor 'progress' has 8 prior KEV entries before snapshot (4 tied to ransomware); description indicates unauthenticated + remote code execution; public exploit artifacts exist (Nuclei template, GitHub PoC); EPSS v4 = 0.23777; vendor/CNA CVSS = 9.8; description similarity 0.92 to prior KEV CVE-2024-4885."
+  },
+  "CVE-2026-48313": {
+    "vendor": "adobe",
+    "product": "ColdFusion",
+    "internet_facing": false,
+    "attack_type": "RCE/AuthBypass/Injection",
+    "explanation": "Predicted KEV Risk Score 47.20/100: Ranked high because vendor 'adobe' has 76 prior KEV entries before snapshot (11 tied to ransomware); description indicates path traversal/file upload; public exploit artifacts exist (Nuclei template); EPSS v4 = 0.04164; vendor/CNA CVSS = 9.3; description similarity 0.84 to prior KEV CVE-2022-41328."
+  },
+  "CVE-2026-55993": {
+    "vendor": "apache",
+    "product": "Software Component",
+    "internet_facing": true,
+    "attack_type": "RCE/AuthBypass/Injection",
+    "explanation": "Predicted KEV Risk Score 43.65/100: Ranked high because vendor 'apache' has 38 prior KEV entries before snapshot (8 tied to ransomware); internet-facing edge/network target (Software Component); description indicates unauthenticated + SSRF; public exploit artifacts exist (GitHub PoC); EPSS v4 = 0.00783; vendor/CNA CVSS = 7.5; description similarity 0.84 to prior KEV CVE-2021-40438."
+  },
+  "CVE-2026-46726": {
+    "vendor": "apache",
+    "product": "Software Component",
+    "internet_facing": true,
+    "attack_type": "RCE/AuthBypass/Injection",
+    "explanation": "Predicted KEV Risk Score 43.66/100: Ranked high because vendor 'apache' has 38 prior KEV entries before snapshot (8 tied to ransomware); internet-facing edge/network target (Software Component); description indicates unauthenticated + SSRF; public exploit artifacts exist (GitHub PoC); EPSS v4 = 0.00783; vendor/CNA CVSS = 7.5; description similarity 0.84 to prior KEV CVE-2021-40438."
+  },
+  "CVE-2026-48203": {
+    "vendor": "apache",
+    "product": "Software Component",
+    "internet_facing": true,
+    "attack_type": "RCE/AuthBypass/Injection",
+    "explanation": "Predicted KEV Risk Score 42.87/100: Ranked high because vendor 'apache' has 38 prior KEV entries before snapshot (8 tied to ransomware); internet-facing edge/network target (Software Component); description indicates unauthenticated + SSRF; public exploit artifacts exist (GitHub PoC); EPSS v4 = 0.00370; vendor/CNA CVSS = 9.1; description similarity 0.87 to prior KEV CVE-2021-40438."
+  },
+  "CVE-2026-46454": {
+    "vendor": "apache",
+    "product": "Software Component",
+    "internet_facing": true,
+    "attack_type": "General Vulnerability",
+    "explanation": "Predicted KEV Risk Score 43.76/100: Ranked high because vendor 'apache' has 38 prior KEV entries before snapshot (8 tied to ransomware); internet-facing edge/network target (Software Component); description indicates unauthenticated; public exploit artifacts exist (GitHub PoC); EPSS v4 = 0.00706; vendor/CNA CVSS = 9.8; description similarity 0.83 to prior KEV CVE-2024-45195."
+  },
+  "CVE-2026-48204": {
+    "vendor": "apache",
+    "product": "Software Component",
+    "internet_facing": true,
+    "attack_type": "General Vulnerability",
+    "explanation": "Predicted KEV Risk Score 43.59/100: Ranked high because vendor 'apache' has 38 prior KEV entries before snapshot (8 tied to ransomware); internet-facing edge/network target (Software Component); description indicates unauthenticated; public exploit artifacts exist (GitHub PoC); EPSS v4 = 0.00452; vendor/CNA CVSS = 9.8; description similarity 0.81 to prior KEV CVE-2020-1938."
+  },
+  "CVE-2026-48205": {
+    "vendor": "apache",
+    "product": "Software Component",
+    "internet_facing": true,
+    "attack_type": "RCE/AuthBypass/Injection",
+    "explanation": "Predicted KEV Risk Score 42.89/100: Ranked high because vendor 'apache' has 38 prior KEV entries before snapshot (8 tied to ransomware); internet-facing edge/network target (Software Component); description indicates unauthenticated + SSRF; public exploit artifacts exist (GitHub PoC); EPSS v4 = 0.00370; vendor/CNA CVSS = 9.1; description similarity 0.86 to prior KEV CVE-2021-40438."
+  },
+  "CVE-2026-46457": {
+    "vendor": "apache",
+    "product": "Software Component",
+    "internet_facing": true,
+    "attack_type": "General Vulnerability",
+    "explanation": "Predicted KEV Risk Score 41.35/100: Ranked high because vendor 'apache' has 38 prior KEV entries before snapshot (8 tied to ransomware); internet-facing edge/network target (Software Component); description indicates unauthenticated; public exploit artifacts exist (GitHub PoC); EPSS v4 = 0.00423; vendor/CNA CVSS = 7.5; description similarity 0.80 to prior KEV CVE-2024-45195."
+  },
+  "CVE-2026-46592": {
+    "vendor": "apache",
+    "product": "Software Component",
+    "internet_facing": true,
+    "attack_type": "General Vulnerability",
+    "explanation": "Predicted KEV Risk Score 71.10/100: Ranked high because vendor 'apache' has 38 prior KEV entries before snapshot (8 tied to ransomware); internet-facing edge/network target (Software Component); description indicates unauthenticated; public exploit artifacts exist (GitHub PoC); EPSS v4 = 0.00396; vendor/CNA CVSS = 7.5; description similarity 0.81 to prior KEV CVE-2024-45195."
+  },
+  "CVE-2026-33453": {
+    "vendor": "apache",
+    "product": "camel-coap",
+    "internet_facing": true,
+    "attack_type": "Camel message header injection",
+    "explanation": "The Apache Camel Camel-Coap component is predicted to have a high risk of remote code execution due to an Improperly Controlled Modification of Dynamically-Determined Object Attributes vulnerability. This allows attackers to inject malicious headers into CoAP requests, which can then be forwarded to header-sensitive producers, leading to potential remote code execution. The risk score is 70.96/100, indicating a significant potential for exploitation. [Verified Drivers: vendor 'apache' has 38 prior KEV entries before snapshot (8 tied to ransomware); internet-facing edge/network target (Software Component); description indicates unauthenticated + remote code execution + command injection; public exploit artifacts exist (GitHub PoC); EPSS v4 = 0.00387; vendor/CNA CVSS = 10.0; description similarity 0.80 to prior KEV CVE-2023-48365]"
+  },
+  "CVE-2026-23918": {
+    "vendor": "apache",
+    "product": "Software Component",
+    "internet_facing": false,
+    "attack_type": "RCE/AuthBypass/Injection",
+    "explanation": "Predicted KEV Risk Score 70.94/100: Ranked high because vendor 'apache' has 38 prior KEV entries before snapshot (8 tied to ransomware); description indicates remote code execution; public exploit artifacts exist (ExploitDB entry, GitHub PoC); EPSS v4 = 0.00952; vendor/CNA CVSS = 8.8; description similarity 0.86 to prior KEV CVE-2024-45195."
+  },
+  "CVE-2026-82384": {
+    "vendor": "apache",
+    "product": "Apache Roller",
+    "internet_facing": false,
+    "attack_type": "RCE/AuthBypass/Injection",
+    "explanation": "Predicted KEV Risk Score 70.94/100: Ranked high because vendor 'apache' has 38 prior KEV entries before snapshot (8 tied to ransomware); description indicates unauthenticated + remote code execution + deserialization; public exploit artifacts exist (GitHub PoC); EPSS v4 = 0.00768; vendor/CNA CVSS = 9.8; description similarity 0.87 to prior KEV CVE-2023-46604."
+  },
+  "CVE-2026-66906": {
+    "vendor": "apache",
+    "product": "Software Component",
+    "internet_facing": true,
+    "attack_type": "RCE/AuthBypass/Injection",
+    "explanation": "Predicted KEV Risk Score 70.55/100: Ranked high because vendor 'apache' has 38 prior KEV entries before snapshot (8 tied to ransomware); internet-facing edge/network target (Software Component); description indicates path traversal/file upload; public exploit artifacts exist (GitHub PoC); EPSS v4 = 0.00530; vendor/CNA CVSS = 9.1; description similarity 0.86 to prior KEV CVE-2023-32315."
+  },
+  "CVE-2026-20200": {
+    "vendor": "cisco",
+    "product": "Software Component",
+    "internet_facing": false,
+    "attack_type": "RCE/AuthBypass/Injection",
+    "explanation": "Predicted KEV Risk Score 70.52/100: Ranked high because vendor 'cisco' has 82 prior KEV entries before snapshot (5 tied to ransomware); description indicates remote code execution; public exploit artifacts exist (GitHub PoC); EPSS v4 = 0.05153; vendor/CNA CVSS = 8.8; description similarity 0.98 to prior KEV CVE-2019-1652."
+  },
+  "CVE-2026-48206": {
+    "vendor": "apache",
+    "product": "Software Component",
+    "internet_facing": true,
+    "attack_type": "General Vulnerability",
+    "explanation": "Predicted KEV Risk Score 70.50/100: Ranked high because vendor 'apache' has 38 prior KEV entries before snapshot (8 tied to ransomware); internet-facing edge/network target (Software Component); description indicates unauthenticated; public exploit artifacts exist (GitHub PoC); EPSS v4 = 0.00349; vendor/CNA CVSS = 5.3; description similarity 0.78 to prior KEV CVE-2024-45195."
+  },
+  "CVE-2026-55994": {
+    "vendor": "apache",
+    "product": "Software Component",
+    "internet_facing": true,
+    "attack_type": "RCE/AuthBypass/Injection",
+    "explanation": "Predicted KEV Risk Score 70.06/100: Ranked high because vendor 'apache' has 38 prior KEV entries before snapshot (8 tied to ransomware); internet-facing edge/network target (Software Component); description indicates SSRF; public exploit artifacts exist (GitHub PoC); EPSS v4 = 0.00621; vendor/CNA CVSS = 7.5; description similarity 0.83 to prior KEV CVE-2021-40438."
+  },
+  "CVE-2026-43866": {
+    "vendor": "apache",
+    "product": "Software Component",
+    "internet_facing": true,
+    "attack_type": "RCE/AuthBypass/Injection",
+    "explanation": "Predicted KEV Risk Score 70.00/100: Ranked high because vendor 'apache' has 38 prior KEV entries before snapshot (8 tied to ransomware); internet-facing edge/network target (Software Component); description indicates deserialization; public exploit artifacts exist (GitHub PoC); EPSS v4 = 0.00617; vendor/CNA CVSS = 7.3; description similarity 0.80 to prior KEV CVE-2024-45195."
+  },
+  "CVE-2026-60093": {
+    "vendor": "apache",
+    "product": "Software Component",
+    "internet_facing": true,
+    "attack_type": "RCE/AuthBypass/Injection",
+    "explanation": "Predicted KEV Risk Score 42.62/100: Ranked high because vendor 'apache' has 38 prior KEV entries before snapshot (8 tied to ransomware); internet-facing edge/network target (Software Component); description indicates path traversal/file upload; public exploit artifacts exist (GitHub PoC); EPSS v4 = 0.00257; vendor/CNA CVSS = 5.5; description similarity 0.84 to prior KEV CVE-2023-32315."
+  },
+  "CVE-2026-43865": {
+    "vendor": "apache",
+    "product": "camel-hazelcast",
+    "internet_facing": true,
+    "attack_type": "Deserialization of Untrusted Data",
+    "explanation": "The Apache Camel Hazelcast component is vulnerable to Deserialization of Untrusted Data due to the creation and management of Hazelcast instances using a default configuration that applies no Java deserialization filter. This allows an attacker to potentially execute arbitrary code on the affected system, leading to a high risk score of 69.80/100. [Verified Drivers: vendor 'apache' has 38 prior KEV entries before snapshot (8 tied to ransomware); description indicates remote code execution + deserialization; public exploit artifacts exist (GitHub PoC); EPSS v4 = 0.00972; vendor/CNA CVSS = 8.1; description similarity 0.83 to prior KEV CVE-2024-38856]"
+  },
+  "CVE-2026-46456": {
+    "vendor": "apache",
+    "product": "Software Component",
+    "internet_facing": true,
+    "attack_type": "General Vulnerability",
+    "explanation": "Predicted KEV Risk Score 41.62/100: Ranked high because vendor 'apache' has 38 prior KEV entries before snapshot (8 tied to ransomware); internet-facing edge/network target (Software Component); public exploit artifacts exist (GitHub PoC); EPSS v4 = 0.00641; vendor/CNA CVSS = 9.8; description similarity 0.83 to prior KEV CVE-2024-45195."
+  },
+  "CVE-2026-6875": {
+    "vendor": "servicenow",
+    "product": "ServiceNow",
+    "internet_facing": false,
+    "attack_type": "RCE/AuthBypass/Injection",
+    "explanation": "Predicted KEV Risk Score 63.62/100: Ranked high because vendor 'servicenow' has 2 prior KEV entries before snapshot; description indicates unauthenticated + remote code execution; public exploit artifacts exist (Nuclei template, GitHub PoC); EPSS v4 = 0.24489; description similarity 0.89 to prior KEV CVE-2025-23209."
+  },
+  "CVE-2026-40859": {
+    "vendor": "apache",
+    "product": "Software Component",
+    "internet_facing": false,
+    "attack_type": "RCE/AuthBypass/Injection",
+    "explanation": "Predicted KEV Risk Score 40.99/100: Ranked high because vendor 'apache' has 38 prior KEV entries before snapshot (8 tied to ransomware); description indicates remote code execution + deserialization; public exploit artifacts exist (GitHub PoC); EPSS v4 = 0.00879; vendor/CNA CVSS = 8.1; description similarity 0.80 to prior KEV CVE-2023-46604."
+  },
+  "CVE-2026-43867": {
+    "vendor": "apache",
+    "product": "Software Component",
+    "internet_facing": false,
+    "attack_type": "RCE/AuthBypass/Injection",
+    "explanation": "Predicted KEV Risk Score 41.17/100: Ranked high because vendor 'apache' has 38 prior KEV entries before snapshot (8 tied to ransomware); description indicates remote code execution + deserialization; public exploit artifacts exist (GitHub PoC); EPSS v4 = 0.00893; vendor/CNA CVSS = 9.8; description similarity 0.81 to prior KEV CVE-2024-38856."
+  },
+  "CVE-2026-44825": {
+    "vendor": "apache",
+    "product": "Apache Solr",
+    "internet_facing": false,
+    "attack_type": "General Vulnerability",
+    "explanation": "Predicted KEV Risk Score 59.00/100: Ranked high because vendor 'apache' has 38 prior KEV entries before snapshot (8 tied to ransomware); public exploit artifacts exist (Nuclei template, GitHub PoC); EPSS v4 = 0.02161; description similarity 0.90 to prior KEV CVE-2020-13927."
+  },
+  "CVE-2026-78329": {
+    "vendor": "apache",
+    "product": "Software Component",
+    "internet_facing": true,
+    "attack_type": "General Vulnerability",
+    "explanation": "Predicted KEV Risk Score 40.37/100: Ranked high because vendor 'apache' has 38 prior KEV entries before snapshot (8 tied to ransomware); internet-facing edge/network target (Software Component); public exploit artifacts exist (GitHub PoC); EPSS v4 = 0.00427; vendor/CNA CVSS = 9.8; description similarity 0.78 to prior KEV CVE-2024-45195."
+  },
+  "CVE-2026-19478": {
+    "vendor": "gitlab",
+    "product": "GitLab",
+    "internet_facing": true,
+    "attack_type": "General Vulnerability",
+    "explanation": "Predicted KEV Risk Score 60.99/100: Ranked high because vendor 'gitlab' has 2 prior KEV entries before snapshot (1 tied to ransomware); internet-facing edge/network target (GitLab); description indicates unauthenticated; public exploit artifacts exist (Nuclei template, GitHub PoC); EPSS v4 = 0.06001; description similarity 0.87 to prior KEV CVE-2024-9537."
+  },
+  "CVE-2026-48909": {
+    "vendor": "joomla",
+    "product": "com_splms",
+    "internet_facing": true,
+    "attack_type": "arbitrary code execution",
+    "explanation": "The vulnerability allows an unauthenticated remote attacker to execute arbitrary code on the server by exploiting the deserialization of user-controlled cookie data without validation. This poses a significant risk as it can lead to full server compromise. [Verified Drivers: vendor 'joomla' has 1 prior KEV entries before snapshot; description indicates unauthenticated + remote code execution; public exploit artifacts exist (Nuclei template, ExploitDB entry, GitHub PoC); EPSS v4 = 0.07638; description similarity 0.93 to prior KEV CVE-2025-3248]"
+  },
+  "CVE-2026-43500": {
+    "vendor": "416baaa9",
+    "product": "Software Component",
+    "internet_facing": false,
+    "attack_type": "General Vulnerability",
+    "explanation": "Predicted KEV Risk Score 60.29/100: Ranked high because public exploit artifacts exist (Metasploit module, ExploitDB entry, GitHub PoC); EPSS v4 = 0.40266; description similarity 0.87 to prior KEV CVE-2025-38352."
+  },
+  "CVE-2025-71257": {
+    "vendor": "disclosure",
+    "product": "BMC FootPrints ITSM",
+    "internet_facing": true,
+    "attack_type": "authentication bypass",
+    "explanation": "The BMC FootPrints ITSM versions 20.20.02 through 20.24.01.001 contain an authentication bypass vulnerability due to improper enforcement of security filters on restricted REST API endpoints and servlets. This allows unauthenticated remote attackers to bypass access controls and gain unauthorized access to application data. [Verified Drivers: internet-facing edge/network target (BMC FootPrints ITSM); description indicates unauthenticated + authentication bypass; public exploit artifacts exist (Nuclei template, GitHub PoC); EPSS v4 = 0.03440; description similarity 0.82 to prior KEV CVE-2024-4358]"
+  },
+  "CVE-2026-49160": {
+    "vendor": "microsoft",
+    "product": "Software Component",
+    "internet_facing": false,
+    "attack_type": "General Vulnerability",
+    "explanation": "Predicted KEV Risk Score 59.45/100: Ranked high because vendor 'microsoft' has 350 prior KEV entries before snapshot (113 tied to ransomware); public exploit artifacts exist (GitHub PoC); EPSS v4 = 0.53829; vendor/CNA CVSS = 7.5; description similarity 0.88 to prior KEV CVE-2025-30397."
+  },
+  "CVE-2026-28496": {
+    "vendor": "security",
+    "product": "Software Component",
+    "internet_facing": true,
+    "attack_type": "RCE/AuthBypass/Injection",
+    "explanation": "Predicted KEV Risk Score 58.72/100: Ranked high because internet-facing edge/network target (Software Component); description indicates remote code execution; public exploit artifacts exist (Nuclei template, GitHub PoC); EPSS v4 = 0.17612; description similarity 0.84 to prior KEV CVE-2019-11580."
+  },
+  "CVE-2025-52694": {
+    "vendor": "5f57b9bf",
+    "product": "Software Component",
+    "internet_facing": false,
+    "attack_type": "RCE/AuthBypass/Injection",
+    "explanation": "Predicted KEV Risk Score 58.42/100: Ranked high because description indicates unauthenticated + remote code execution + SQL injection; public exploit artifacts exist (Nuclei template, GitHub PoC); EPSS v4 = 0.08999; description similarity 0.82 to prior KEV CVE-2023-46748."
+  },
+  "CVE-2026-33439": {
+    "vendor": "security",
+    "product": "Software Component",
+    "internet_facing": false,
+    "attack_type": "RCE/AuthBypass/Injection",
+    "explanation": "Predicted KEV Risk Score 57.51/100: Ranked high because description indicates unauthenticated + remote code execution + command injection; public exploit artifacts exist (Nuclei template, GitHub PoC); EPSS v4 = 0.07004; description similarity 0.88 to prior KEV CVE-2021-22986."
+  },
+  "CVE-2026-10523": {
+    "vendor": "3c1d8aa1",
+    "product": "Ivanti Sentry",
+    "internet_facing": false,
+    "attack_type": "RCE/AuthBypass/Injection",
+    "explanation": "Predicted KEV Risk Score 55.87/100: Ranked high because description indicates unauthenticated + authentication bypass; public exploit artifacts exist (GitHub PoC); EPSS v4 = 0.51870; description similarity 0.96 to prior KEV CVE-2024-7593."
+  },
+  "CVE-2026-47291": {
+    "vendor": "microsoft",
+    "product": "Windows HTTP.sys",
+    "internet_facing": false,
+    "attack_type": "General Vulnerability",
+    "explanation": "Predicted KEV Risk Score 55.85/100: Ranked high because vendor 'microsoft' has 350 prior KEV entries before snapshot (113 tied to ransomware); description indicates memory corruption; public exploit artifacts exist (GitHub PoC); EPSS v4 = 0.22750; vendor/CNA CVSS = 9.8; description similarity 0.98 to prior KEV CVE-2025-24985."
+  },
+  "CVE-2026-42281": {
+    "vendor": "security",
+    "product": "Software Component",
+    "internet_facing": false,
+    "attack_type": "RCE/AuthBypass/Injection",
+    "explanation": "Predicted KEV Risk Score 55.79/100: Ranked high because description indicates unauthenticated + SSRF; public exploit artifacts exist (Nuclei template, GitHub PoC); EPSS v4 = 0.03260; description similarity 0.85 to prior KEV CVE-2024-21893."
+  },
+  "CVE-2026-22200": {
+    "vendor": "disclosure",
+    "product": "Enhancesoft osTicket",
+    "internet_facing": false,
+    "attack_type": "RCE/AuthBypass/Injection",
+    "explanation": "Predicted KEV Risk Score 55.03/100: Ranked high because description indicates path traversal/file upload; public exploit artifacts exist (Nuclei template, GitHub PoC); EPSS v4 = 0.17276; description similarity 0.81 to prior KEV CVE-2021-26085."
+  },
+  "CVE-2026-50656": {
+    "vendor": "microsoft",
+    "product": "Software Component",
+    "internet_facing": false,
+    "attack_type": "General Vulnerability",
+    "explanation": "Predicted KEV Risk Score 54.31/100: Ranked high because vendor 'microsoft' has 350 prior KEV entries before snapshot (113 tied to ransomware); public exploit artifacts exist (GitHub PoC); EPSS v4 = 0.10749; description similarity 0.95 to prior KEV CVE-2023-23397."
+  },
+  "CVE-2026-52824": {
+    "vendor": "security",
+    "product": "Software Component",
+    "internet_facing": false,
+    "attack_type": "General Vulnerability",
+    "explanation": "Predicted KEV Risk Score 53.96/100: Ranked high because description indicates unauthenticated; public exploit artifacts exist (Nuclei template, GitHub PoC); EPSS v4 = 0.01333; description similarity 0.85 to prior KEV CVE-2021-39226."
+  },
+  "CVE-2026-27971": {
+    "vendor": "security",
+    "product": "qwik",
+    "internet_facing": true,
+    "attack_type": "RCE",
+    "explanation": "The vulnerability in Qwik (CVE-2026-27971) allows an attacker to execute arbitrary code on the server through an unsafe deserialization vulnerability in the server$ RPC mechanism. This can be exploited by any unauthenticated user with a single HTTP request, provided that require() is available at runtime in the affected deployment. The predicted risk score is 53.94/100, indicating a significant risk of exploitation. [Verified Drivers: description indicates unauthenticated + remote code execution + deserialization; public exploit artifacts exist (Nuclei template); EPSS v4 = 0.23118; description similarity 0.79 to prior KEV CVE-2020-5741]"
+  },
+  "CVE-2026-33868": {
+    "vendor": "security",
+    "product": "Software Component",
+    "internet_facing": false,
+    "attack_type": "General Vulnerability",
+    "explanation": "Predicted KEV Risk Score 53.78/100: Ranked high because description indicates unauthenticated; public exploit artifacts exist (Nuclei template, GitHub PoC); EPSS v4 = 0.00864; description similarity 0.82 to prior KEV CVE-2025-58360."
+  },
+  "CVE-2026-49952": {
+    "vendor": "disclosure",
+    "product": "Discuz! X5.0",
+    "internet_facing": true,
+    "attack_type": "authentication bypass",
+    "explanation": "The vulnerability allows unauthenticated remote attackers to bypass authentication and gain unauthorized access to database backup and restore functionality by exploiting a shared cryptographic key between UCenter integration and the database backup API exposed by dbbak.php. This poses a high risk as it could lead to unauthorized access to sensitive data. [Verified Drivers: description indicates unauthenticated + authentication bypass; public exploit artifacts exist (Nuclei template, ExploitDB entry, GitHub PoC); EPSS v4 = 0.04194; vendor/CNA CVSS = 9.1; description similarity 0.88 to prior KEV CVE-2025-4427]"
+  },
+  "CVE-2026-2329": {
+    "vendor": "rapid7",
+    "product": "Software Component",
+    "internet_facing": false,
+    "attack_type": "RCE/AuthBypass/Injection",
+    "explanation": "Predicted KEV Risk Score 53.08/100: Ranked high because description indicates unauthenticated + remote code execution + memory corruption; public exploit artifacts exist (Metasploit module); EPSS v4 = 0.41137; description similarity 0.90 to prior KEV CVE-2018-7445."
+  },
+  "CVE-2023-54391": {
+    "vendor": "proxmox",
+    "product": "7.0 through 8.0",
+    "internet_facing": true,
+    "attack_type": "authentication bypass",
+    "explanation": "The vulnerability allows unauthenticated attackers to authenticate as any existing enabled user without a configured second factor by supplying an arbitrary tfa-challenge value in the API login endpoint. This poses a high risk as it bypasses the security mechanism designed to prevent unauthorized access, potentially leading to unauthorized actions and data exposure. [Verified Drivers: internet-facing edge/network target (Software Component); description indicates unauthenticated + authentication bypass; public exploit artifacts exist (Nuclei template, GitHub PoC); EPSS v4 = 0.03031; vendor/CNA CVSS = 9.8; description similarity 0.87 to prior KEV CVE-2025-4427]"
+  },
+  "CVE-2026-65694": {
+    "vendor": "disclosure",
+    "product": "Microweber CMS",
+    "internet_facing": false,
+    "attack_type": "RCE/AuthBypass/Injection",
+    "explanation": "Predicted KEV Risk Score 52.57/100: Ranked high because description indicates unauthenticated + path traversal/file upload; public exploit artifacts exist (Nuclei template, GitHub PoC); EPSS v4 = 0.02456; vendor/CNA CVSS = 7.5; description similarity 0.96 to prior KEV CVE-2023-38950."
+  },
+  "CVE-2025-57231": {
+    "vendor": "cve",
+    "product": "Docmost",
+    "internet_facing": false,
+    "attack_type": "RCE/AuthBypass/Injection",
+    "explanation": "Predicted KEV Risk Score 52.14/100: Ranked high because description indicates unauthenticated + path traversal/file upload; public exploit artifacts exist (Nuclei template, GitHub PoC); EPSS v4 = 0.01774; vendor/CNA CVSS = 7.5; description similarity 0.91 to prior KEV CVE-2019-7483."
+  },
+  "CVE-2026-63520": {
+    "vendor": "microsoft",
+    "product": "office sharepoint",
+    "internet_facing": true,
+    "attack_type": "code execution over a network",
+    "explanation": "The vulnerability in the specified product allows an unauthorized attacker to execute code over a network due to improper input validation. This poses a significant risk as it can lead to unauthorized access and control of the system. The predicted risk score of 51.85/100 indicates a high level of potential risk. The similarity to a previously reported vulnerability (CVE-2025-30397) further underscores the potential for similar attacks. [Verified Drivers: vendor 'microsoft' has 350 prior KEV entries before snapshot (113 tied to ransomware); internet-facing edge/network target (Microsoft Office SharePoint); public exploit artifacts exist (GitHub PoC); EPSS v4 = 0.02893; vendor/CNA CVSS = 8.1; description similarity 0.96 to prior KEV CVE-2025-30397]"
+  },
+  "CVE-2026-42980": {
+    "vendor": "microsoft",
+    "product": "Windows NT OS Kernel",
+    "internet_facing": false,
+    "attack_type": "General Vulnerability",
+    "explanation": "Predicted KEV Risk Score 51.84/100: Ranked high because vendor 'microsoft' has 350 prior KEV entries before snapshot (113 tied to ransomware); public exploit artifacts exist (GitHub PoC); EPSS v4 = 0.06949; vendor/CNA CVSS = 7.8; description similarity 0.97 to prior KEV CVE-2025-30400."
+  }
+}
