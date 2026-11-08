@@ -11,7 +11,7 @@
 To ensure our vulnerability rankings generalize to real-world security operations without any post-hoc data leakage, we architected a **4-Fix Leak-Free Predictive Pipeline** (`Granite_CVE_Analyzer/leak_free_model.py`):
 
 1. **Fix 1 — Strict Data Leakage Prevention (Safe vs. Unsafe Columns Audit)**: Dropped all columns populated by NIST/NVD *after* exploitation becomes public (`affected_products.csv` CPE counts, `nvd_status`, `n_affected_cpes`, `n_references`, NIST's own `cvss3_score` where `cvss3_source == 'nvd@nist.gov'`, `references.csv` links, and NIST-assigned CWEs). Replaced the leaky CPE footprint score by extracting vendor, product, internet-facing edge/appliance flags, and attack types directly from `description` and `assigner`, matched against how often that vendor/assigner appeared in `known_exploited.csv` **strictly on or before** the snapshot month (`date_added <= end_of_snapshot_month`).
-2. **Fix 2 — Out-of-Time Temporal Backtesting (2024–2025)**: Rebuilt the exact scoreboard setup across 2024–2025 (`in_kev == 0` at snapshot month, predicting future KEV additions up to `2025-12-31`), always training on older months and testing on newer unseen months. Across 5 out-of-time test periods (91 future KEV additions), our **Leak-Free GBDT + Readable Model** caught **48 / 91 (52.7%)** and our **Strict No-CVSS Model** caught **50 / 91 (54.9%)** in the per-period Top 500 — decisively beating all three baselines: **Exploit-then-EPSS** (`35 / 91`), **EPSS-First** (`24 / 91`), and **CVSS-First** (`7 / 91`).
+2. **Fix 2 — Out-of-Time Temporal Backtesting (2024–2025)**: Rebuilt the exact scoreboard setup across 2024–2025 (`in_kev == 0` at snapshot month, predicting future KEV additions up to `2025-12-31`), always training on older months and testing on newer unseen months. Across 5 out-of-time test periods (91 future KEV additions), our **Leak-Free GBDT + Readable Model** and our **Strict No-CVSS Model** each caught **48 / 91 (52.7%)** in the per-period Top 500, compared with **Exploit-then-EPSS** (`35 / 91`), **EPSS-First** (`24 / 91`), and **CVSS-First** (`7 / 91`). Our models match or beat every baseline in every period (2025-Q2 is a raw tie with Exploit-then-EPSS at 12).
 3. **Fix 3 — Anti-Hallucination & Grounded Why-Explanations**: Enforced a deterministic post-check verifier (`verify_and_sanitize_explanation`) that blocks any output claiming `"actively exploited"` or `"exploited in the wild"` (since outputs are predictions of future risk) and rejects hallucinated numbers. Every explanation explicitly names the verified drivers that ranked the CVE highly.
 4. **Fix 4 — Semantic Description Similarity & Cached Granite 4 3B Extraction**: Computed 48-dimensional TF-IDF + SVD semantic embeddings across all descriptions to measure cosine similarity against **strictly prior** KEV descriptions, and used local `granite4:3b` (cached in `Granite_CVE_Analyzer/granite_cache.json`) for structured feature extraction (`vendor`, `product`, `internet_facing`, `attack_type`) and grounded explanations.
 
@@ -50,31 +50,34 @@ Each test period is trained **strictly on older months** and evaluated on newer 
 
 | Out-of-Time Test Period | Train Window | Test Pool ($N$) | Future KEVs | Baseline 1: `CVSS-First` | Baseline 2: `EPSS-First` | Baseline 3: `Exploit-then-EPSS` | `Readable Score` (Ours) | `Our Model` (GBDT + Readable) | `Strict No-CVSS` (Ours) |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **2024-Q3 (Jul–Sep 2024)** | `2024-01..06` | 8,440 | 18 | 0 *(0)* | 3 *(2)* | 6 *(3)* | 8 *(6)* | **9 *(4)*** | **11 *(4)*** |
-| **2024-Q4 (Oct–Dec 2024)** | `2024-01..09` | 11,000 | 21 | 0 *(0)* | 2 *(2)* | 5 *(3)* | 5 *(5)* | **7 *(5)*** | **7 *(5)*** |
-| **2025-Q1 (Jan–Mar 2025, v4 Shift)** | `2024-01..12` | 12,139 | 18 | 3 *(1)* | 7 *(3)* | 6 *(3)* | 7 *(5)* | **13 *(5)*** | **13 *(5)*** |
+| **2024-Q3 (Jul–Sep 2024)** | `2024-01..06` | 8,440 | 18 | 0 *(0)* | 3 *(2)* | 6 *(3)* | 8 *(5)* | **9 *(4)*** | **9 *(4)*** |
+| **2024-Q4 (Oct–Dec 2024)** | `2024-01..09` | 11,000 | 21 | 0 *(0)* | 2 *(2)* | 5 *(3)* | 5 *(3)* | **7 *(5)*** | **7 *(5)*** |
+| **2025-Q1 (Jan–Mar 2025, v4 Shift)** | `2024-01..12` | 12,139 | 18 | 3 *(1)* | 7 *(3)* | 6 *(3)* | 7 *(4)* | **13 *(5)*** | **13 *(5)*** |
 | **2025-Q2 (Apr–Jun 2025, Post-v4)** | `2024-01..25-03` | 11,942 | 17 | 2 *(2)* | 9 *(6)* | 12 *(9)* | 12 *(10)* | **12 *(10)*** | **12 *(11)*** |
-| **2025-H2 (Jul–Dec 2025, Latest)** | `2024-01..25-06` | 23,688 | 17 | 2 *(1)* | 3 *(2)* | 6 *(5)* | 7 *(5)* | **7 *(6)*** | **7 *(7)*** |
-| **SUM OF PER-PERIOD TOP-500 *(Scaled)*** | — | **67,209** | **91** | **7 *(4)*** | **24 *(15)*** | **35 *(23)*** | **39 *(31)*** | **48 *(30)*** | **50 *(32)*** |
-| **POOLED OUT-OF-TIME TOP-500** | — | **67,209** | **91** | **4** | **14** | **24** | **30** | **29** | **30** |
+| **2025-H2 (Jul–Dec 2025, Latest)** | `2024-01..25-06` | 23,688 | 17 | 2 *(1)* | 3 *(2)* | 6 *(5)* | 7 *(5)* | **7 *(6)*** | **7 *(6)*** |
+| **SUM OF PER-PERIOD TOP-500 *(Scaled)*** | — | **67,209** | **91** | **7 *(4)*** | **24 *(15)*** | **35 *(23)*** | **39 *(27)*** | **48 *(30)*** | **48 *(31)*** |
+| **POOLED OUT-OF-TIME TOP-500** | — | **67,209** | **91** | **4** | **14** | **24** | **29** | **28** | **28** |
 
-*(Note: Numbers outside parentheses are Raw Top-500 catches per period; numbers in parentheses are Scaled Top-500 catches $K_{\text{scaled}}$.)*
+*(Note: Numbers outside parentheses are Raw Top-500 catches per period; numbers in parentheses are Scaled Top-500 catches $K_{\text{scaled}}$. Source of truth: `Granite_CVE_Analyzer/backtest_results.json`.)*
 
 ### Visual Comparison of Out-of-Time Future KEV Catches (Out of 91 Future KEVs)
 
 ```
-Strict No-CVSS (Ours)       ██████████████████████████████████████████████████ 50 / 91 (54.9% | 32 Scaled)
+Strict No-CVSS (Ours)       ████████████████████████████████████████████████   48 / 91 (52.7% | 31 Scaled)
 Our Model (GBDT + Readable) ████████████████████████████████████████████████   48 / 91 (52.7% | 30 Scaled)
-Readable Formula (Ours)     ███████████████████████████████████████            39 / 91 (42.9% | 31 Scaled)
+Readable Formula (Ours)     ███████████████████████████████████████            39 / 91 (42.9% | 27 Scaled)
 Baseline: Exploit-then-EPSS ███████████████████████████████████                35 / 91 (38.5% | 23 Scaled)
 Baseline: EPSS-First        ████████████████████████                           24 / 91 (26.4% | 15 Scaled)
 Baseline: CVSS-First        ███████                                             7 / 91 ( 7.7% |  4 Scaled)
 ```
 
 > [!IMPORTANT]
-> **Key Backtest Proof:**
-> 1. **Beats All 3 Baselines Across Every Period**: Our leak-free model catches **+37.1% more future KEVs** (`48` vs `35`) than `Exploit-then-EPSS`, **2.0x** `EPSS-First` (`48` vs `24`), and **6.86x** `CVSS-First` (`48` vs `7`).
-> 2. **Strict No-CVSS Is Even Stronger**: Dropping CVSS completely (`Strict No-CVSS`) catches **50 / 91 (54.9%)** raw and **32 / 91** scaled — proving our architecture does not rely on CVSS at all.
+> **Key Backtest Results:**
+> 1. **Matches or beats every baseline in every period**: Summed across periods, our leak-free model catches **48 vs 35** future KEVs for `Exploit-then-EPSS` (+37%), **2.0x** `EPSS-First` (48 vs 24), and **6.9x** `CVSS-First` (48 vs 7). In 2025-Q2 it ties `Exploit-then-EPSS` on raw catches (12 vs 12) and wins on scaled catches (10–11 vs 9).
+> 2. **CVSS is not needed**: The `Strict No-CVSS` variant drops CVSS entirely and catches the same **48 / 91** raw (31 scaled).
+
+> [!WARNING]
+> **Caveat on optimism:** The gradient-boosting component is always trained strictly on older months. However, the weights in the readable formula (`compute_readable_score`) were adjusted once after seeing an earlier run of this same backtest, so the readable and combined scores are somewhat optimistic. A fully clean estimate would need a period that was never looked at during tuning (e.g., 2026 KEV additions once they're known).
 
 ---
 
@@ -105,13 +108,16 @@ Every explanation is verified by `verify_and_sanitize_explanation()` to guarante
 
 | Rank | CVE ID | Predicted Score | Snapshot EPSS | CNA CVSS | Vendor (Extracted) | Prior KEVs ($\le$ Snap) | Exploit Flags | Grounded Why-Explanation (Verified) |
 | :---: | :--- | :---: | :---: | :---: | :--- | :---: | :---: | :--- |
-| **#1** | `CVE-2026-8037` | **79.35** | 0.84793 | *Excluded (NVD)* | `progress` | 8 (4 ransom) | 2 (Nuclei, PoC) | Vendor `progress` has 8 prior KEVs; internet-facing ADC appliance; RCE + command injection; Nuclei + GitHub PoC; EPSS v4 = 0.84793; 0.93 sim to KEV `CVE-2019-7256`. |
-| **#2** | `CVE-2026-6875` | **63.62** | 0.24489 | *Excluded (NVD)* | `servicenow` | 2 | 2 (Nuclei, PoC) | Vendor `servicenow` has 2 prior KEVs; unauthenticated RCE; Nuclei + GitHub PoC; EPSS v4 = 0.24489; 0.89 sim to KEV `CVE-2025-23209`. |
-| **#3** | `CVE-2026-19478` | **60.99** | 0.06001 | *Excluded (NVD)* | `gitlab` | 2 (1 ransom) | 2 (Nuclei, PoC) | Vendor `gitlab` has 2 prior KEVs; internet-facing GitLab instance; unauthenticated access; Nuclei + GitHub PoC; EPSS v4 = 0.06001; 0.87 sim to KEV `CVE-2024-9537`. |
-| **#4** | `CVE-2026-48909` | **60.92** | 0.07638 | *Excluded (NVD)* | `joomla` | 1 | 3 (Nuclei, EDB, PoC) | Unauthenticated cookie deserialization RCE; 3 public exploit sources (Nuclei, ExploitDB, GitHub PoC); EPSS v4 = 0.07638; 0.93 sim to KEV `CVE-2025-3248`. |
-| **#5** | `CVE-2026-2699` | **60.47** | 0.23777 | 9.8 (CNA) | `progress` | 8 (4 ransom) | 2 (Nuclei, PoC) | Vendor `progress` has 8 prior KEVs; unauthenticated RCE; Nuclei + GitHub PoC; EPSS v4 = 0.23777; CNA CVSS = 9.8; 0.92 sim to KEV `CVE-2024-4885`. |
-| **#6** | `CVE-2026-43500` | **60.29** | 0.40266 | *Excluded (NVD)* | `linux` | 0 | 3 (MSF, EDB, PoC) | Public exploit artifacts in Metasploit, ExploitDB, and GitHub PoC; EPSS v4 = 0.40266; 0.87 sim to prior KEV `CVE-2025-38352`. |
-| **#7** | `CVE-2025-71257` | **59.91** | 0.03440 | *Excluded (NVD)* | `bmc` | 0 | 2 (Nuclei, PoC) | Internet-facing BMC FootPrints ITSM; unauthenticated REST API auth bypass; Nuclei + GitHub PoC; EPSS v4 = 0.03440; 0.82 sim to KEV `CVE-2024-4358`. |
-| **#8** | `CVE-2026-49160` | **59.45** | 0.53829 | 7.5 (CNA) | `microsoft` | 350 (113 ransom) | 1 (PoC) | Vendor `microsoft` has 350 prior KEVs (113 tied to ransomware); GitHub PoC; EPSS v4 = 0.53829; CNA CVSS = 7.5; 0.88 sim to KEV `CVE-2025-30397`. |
-| **#9** | `CVE-2026-44825` | **59.00** | 0.02161 | *Excluded (NVD)* | `apache` | 38 (8 ransom) | 2 (Nuclei, PoC) | Vendor `apache` (Apache Solr) has 38 prior KEVs; Nuclei + GitHub PoC; EPSS v4 = 0.02161; 0.90 sim to KEV `CVE-2020-13927`. |
-| **#10** | `CVE-2026-71362` | **58.88** | 0.25136 | 9.1 (CNA) | `adobe` | 76 (11 ransom) | 2 (Nuclei, PoC) | Vendor `adobe` has 76 prior KEVs; memory corruption/PrivEsc; Nuclei + GitHub PoC; EPSS v4 = 0.25136; CNA CVSS = 9.1; 0.71 sim to KEV `CVE-2023-29298`. |
+| **#1** | `CVE-2026-8037` | **80.41** | 0.84793 | *Excluded (NVD)* | `progress` | 8 (4 ransom) | 2 (Nuclei, PoC) | Vendor `progress` has 8 prior KEVs; internet-facing ADC appliance; RCE + command injection; Nuclei + GitHub PoC; EPSS v4 = 0.84793; 0.93 sim to KEV `CVE-2019-7256`. |
+| **#2** | `CVE-2026-10523` | **67.19** | 0.51870 | *Excluded (NVD)* | `ivanti` | 30 (12 ransom) | 1 (PoC) | Vendor `ivanti` has 30 prior KEVs; unauthenticated authentication bypass (Ivanti Sentry); GitHub PoC; EPSS v4 = 0.51870; 0.96 sim to KEV `CVE-2024-7593`. |
+| **#3** | `CVE-2026-43500` | **64.28** | 0.40266 | *Excluded (NVD)* | `linux` | 23 (2 ransom) | 3 (MSF, EDB, PoC) | Vendor `linux` has 23 prior KEVs; Metasploit + ExploitDB + GitHub PoC; EPSS v4 = 0.40266; 0.87 sim to KEV `CVE-2025-38352`. |
+| **#4** | `CVE-2026-6875` | **63.54** | 0.24489 | *Excluded (NVD)* | `servicenow` | 2 | 2 (Nuclei, PoC) | Vendor `servicenow` has 2 prior KEVs; unauthenticated RCE; Nuclei + GitHub PoC; EPSS v4 = 0.24489; 0.89 sim to KEV `CVE-2025-23209`. |
+| **#5** | `CVE-2026-2699` | **61.84** | 0.23777 | 9.8 (CNA) | `progress` | 8 (4 ransom) | 2 (Nuclei, PoC) | Vendor `progress` has 8 prior KEVs; unauthenticated RCE; Nuclei + GitHub PoC; EPSS v4 = 0.23777; CNA CVSS = 9.8; 0.92 sim to KEV `CVE-2024-4885`. |
+| **#6** | `CVE-2026-48909` | **60.84** | 0.07638 | *Excluded (NVD)* | `joomla` | 1 | 3 (Nuclei, EDB, PoC) | Unauthenticated cookie deserialization RCE; Nuclei + ExploitDB + GitHub PoC; EPSS v4 = 0.07638; 0.93 sim to KEV `CVE-2025-3248`. |
+| **#7** | `CVE-2026-19478` | **60.70** | 0.06001 | *Excluded (NVD)* | `gitlab` | 2 (1 ransom) | 2 (Nuclei, PoC) | Vendor `gitlab` has 2 prior KEVs; internet-facing GitLab instance; unauthenticated access; Nuclei + GitHub PoC; EPSS v4 = 0.06001; 0.87 sim to KEV `CVE-2024-9537`. |
+| **#8** | `CVE-2025-71257` | **59.43** | 0.03440 | *Excluded (NVD)* | *(not extracted — BMC)* | 0 | 2 (Nuclei, PoC) | Internet-facing BMC FootPrints ITSM; unauthenticated REST API auth bypass; Nuclei + GitHub PoC; EPSS v4 = 0.03440; 0.82 sim to KEV `CVE-2024-4358`. |
+| **#9** | `CVE-2026-39808` | **59.39** | 0.13099 | 9.8 (CNA) | `fortinet` | 23 (14 ransom) | 2 (Nuclei, PoC) | Vendor `fortinet` has 23 prior KEVs; command injection (FortiSandbox); Nuclei + GitHub PoC; EPSS v4 = 0.13099; CNA CVSS = 9.8; 0.94 sim to KEV `CVE-2025-58034`. |
+| **#10** | `CVE-2026-71362` | **58.93** | 0.25136 | 9.1 (CNA) | `adobe` | 76 (11 ransom) | 2 (Nuclei, PoC) | Vendor `adobe` has 76 prior KEVs; Nuclei + GitHub PoC; EPSS v4 = 0.25136; CNA CVSS = 9.1; 0.71 sim to KEV `CVE-2023-29298`. |
+
+> [!NOTE]
+> Vendor extraction misses some vendors that are only named in product text (e.g., #8 BMC is labelled `unknown`, so it gets no prior-KEV credit). That under-ranks rather than over-ranks those CVEs.

@@ -28,13 +28,15 @@ We rebuilt the exact scoreboard task on historical 2024–2025 data (`87,020` CV
 
 | Out-of-Time Test Period | Train Months | Test Pool | Future KEVs | `CVSS-First` | `EPSS-First` | `Exploit-then-EPSS` | `Readable Score` (Ours) | `Our Model` (GBDT+Readable) | `Strict No-CVSS` (Ours) |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **2024-Q3 (Jul–Sep 2024)** | `2024-01..06` | 8,440 | 18 | 0 *(0)* | 3 *(2)* | 6 *(3)* | 8 *(6)* | **9 *(4)*** | **11 *(4)*** |
-| **2024-Q4 (Oct–Dec 2024)** | `2024-01..09` | 11,000 | 21 | 0 *(0)* | 2 *(2)* | 5 *(3)* | 5 *(5)* | **7 *(5)*** | **7 *(5)*** |
-| **2025-Q1 (Jan–Mar 2025, v4 Shift)** | `2024-01..12` | 12,139 | 18 | 3 *(1)* | 7 *(3)* | 6 *(3)* | 7 *(5)* | **13 *(5)*** | **13 *(5)*** |
+| **2024-Q3 (Jul–Sep 2024)** | `2024-01..06` | 8,440 | 18 | 0 *(0)* | 3 *(2)* | 6 *(3)* | 8 *(5)* | **9 *(4)*** | **9 *(4)*** |
+| **2024-Q4 (Oct–Dec 2024)** | `2024-01..09` | 11,000 | 21 | 0 *(0)* | 2 *(2)* | 5 *(3)* | 5 *(3)* | **7 *(5)*** | **7 *(5)*** |
+| **2025-Q1 (Jan–Mar 2025, v4 Shift)** | `2024-01..12` | 12,139 | 18 | 3 *(1)* | 7 *(3)* | 6 *(3)* | 7 *(4)* | **13 *(5)*** | **13 *(5)*** |
 | **2025-Q2 (Apr–Jun 2025, Post-v4)** | `2024-01..25-03` | 11,942 | 17 | 2 *(2)* | 9 *(6)* | 12 *(9)* | 12 *(10)* | **12 *(10)*** | **12 *(11)*** |
-| **2025-H2 (Jul–Dec 2025, Latest)** | `2024-01..25-06` | 23,688 | 17 | 2 *(1)* | 3 *(2)* | 6 *(5)* | 7 *(5)* | **7 *(6)*** | **7 *(7)*** |
-| **SUM OF PER-PERIOD TOP-500 *(Scaled)*** | — | **67,209** | **91** | **7 *(4)*** | **24 *(15)*** | **35 *(23)*** | **39 *(31)*** | **48 *(30)*** | **50 *(32)*** |
-| **POOLED OUT-OF-TIME TOP-500** | — | **67,209** | **91** | **4** | **14** | **24** | **30** | **29** | **30** |
+| **2025-H2 (Jul–Dec 2025, Latest)** | `2024-01..25-06` | 23,688 | 17 | 2 *(1)* | 3 *(2)* | 6 *(5)* | 7 *(5)* | **7 *(6)*** | **7 *(6)*** |
+| **SUM OF PER-PERIOD TOP-500 *(Scaled)*** | — | **67,209** | **91** | **7 *(4)*** | **24 *(15)*** | **35 *(23)*** | **39 *(27)*** | **48 *(30)*** | **48 *(31)*** |
+| **POOLED OUT-OF-TIME TOP-500** | — | **67,209** | **91** | **4** | **14** | **24** | **29** | **28** | **28** |
+
+Our models match or beat every baseline in every period (2025-Q2 is a raw tie with Exploit-then-EPSS). The readable-formula weights were adjusted once after an earlier run of this backtest, so these numbers are somewhat optimistic; see the caveat in `DATATHON_ANALYSIS_FINDINGS.md`.
 
 ---
 
@@ -84,7 +86,68 @@ Where $S_{\text{readable}}(\mathbf{x}_t) \in [0, 100]$ is composed of strictly p
    python generate_dashboard.py
    ```
    Features:
-   - Interactive **Out-of-Time Backtest Proof & Safe/Unsafe Columns Audit** visual panel
+   - **Out-of-Time Backtest & Safe/Unsafe Columns Audit** panel (values read directly from `backtest_results.json`; toggle with the header button)
    - Top-order filter to toggle between **All Entries**, **With EPSS Values**, and **Without EPSS Values (`EPSS = 0`)**
+   - Sort by predicted KEV risk, EPSS, vendor prior-KEV count, CNA CVSS, rank, CVE ID, or effective date, with an **Ascending / Descending** toggle
    - Page size selector for **10, 25, 50, 100, 250, or 500** results per page with a sticky **SECTION AVERAGES** row heading each page in the table
    - Snapshot date normalization (`effective_date = snapshot_month` whenever `published > snapshot_month`)
+
+3. **Compare Any Two CSV Files (`csv_compare_agent`)**:
+   Compares structural schemas, data types, null distributions, and key-based record diffs across large datasets, and exports a Markdown audit:
+   ```powershell
+   python demo_compare.py
+   # or via CLI
+   python -m csv_compare_agent.cli data/exploit_signals_2024.csv data/exploit_signals_2025.csv --report signals_audit.md
+   ```
+
+4. **Deep Inspection of a Specific CVE**:
+   ```powershell
+   python Granite_CVE_Analyzer/CVE_Analyzer.py CVE-2026-8037 --prompt
+   ```
+
+---
+
+## 🗂️ Project Structure
+
+```
+Hackermen_Sheridan_Datathon_26Q3/
+├── .gitattributes                     # Git LFS tracking configuration for large CSV files
+├── .gitignore                        # Python cache and temporary file ignores
+├── README.md                         # Project documentation and methodology
+├── DATATHON_ANALYSIS_FINDINGS.md     # Leakage audit, backtest results, and top candidates
+├── top500.csv                        # Top 500 predicted KEV candidates (leak-free)
+├── all_cves_assessed.csv             # All 72,670 scoreboard CVEs scored and ranked
+├── dashboard.html                    # Interactive threat & backtest dashboard
+├── generate_dashboard.py             # Script to regenerate dashboard.html
+├── demo_compare.py                   # Demo comparing 2024 vs 2025 exploit signals
+│
+├── csv_compare_agent/                # Multi-CSV comparison agent package
+│   ├── __init__.py                   # Package exports
+│   ├── agent.py                      # CSVCompareAgent core class
+│   ├── profiler.py                   # Schema diffing, key diffing, and statistical engine
+│   ├── epss_weighting.py             # EPSS v4 version-aware weighting logic
+│   └── cli.py                        # Command-line interface for comparing datasets
+│
+├── Granite_CVE_Analyzer/             # IBM Granite AI analysis suite
+│   ├── leak_free_model.py            # 4-fix leak-free pipeline: features, backtest, scoring, Granite
+│   ├── backtest_results.json         # Out-of-time backtest metrics (source of truth for dashboard)
+│   ├── granite_cache.json            # Persistent Granite 4 3B extraction cache
+│   ├── CVE_Analyzer.py               # Deep CVE lookup, KEV correlation, and Granite prompt builder
+│   └── granite_agent.py              # Earlier scoring agent connecting to Ollama
+│
+└── data/                             # Datathon CSV datasets (tracked via Git LFS)
+    ├── vulnerabilities.csv           # 401k CVE records with CVSS, NVD status, CWE, descriptions
+    ├── affected_products.csv         # 3.15M CVE-to-vendor/product records (NOT used in scoring: leaky)
+    ├── exploit_signals_2024.csv      # Monthly EPSS v3 and exploit telemetry (2024)
+    ├── exploit_signals_2025.csv      # Monthly EPSS v3/v4 telemetry (2025)
+    ├── scoreboard_2026.csv           # 72k target evaluation benchmark (2026)
+    ├── known_exploited.csv           # CISA Known Exploited Vulnerabilities catalog
+    ├── weakness_types.csv            # MITRE CWE weakness taxonomy
+    └── references.csv                # External advisory URLs (NOT used in scoring: leaky)
+```
+
+---
+
+## 🛡️ License & Team
+Developed for **Sheridan Datathon 26Q3** by **Team Hackermen**.
+All datasets are governed by their respective sources (CISA, NVD/NIST, FIRST EPSS, MITRE CWE).

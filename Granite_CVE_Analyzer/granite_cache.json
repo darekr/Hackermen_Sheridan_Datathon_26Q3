@@ -369,5 +369,26 @@
     "internet_facing": false,
     "attack_type": "General Vulnerability",
     "explanation": "Predicted KEV Risk Score 51.84/100: Ranked high because vendor 'microsoft' has 350 prior KEV entries before snapshot (113 tied to ransomware); public exploit artifacts exist (GitHub PoC); EPSS v4 = 0.06949; vendor/CNA CVSS = 7.8; description similarity 0.97 to prior KEV CVE-2025-30400."
+  },
+  "CVE-2026-1603": {
+    "vendor": "ivanti",
+    "product": "Ivanti Endpoint Manager",
+    "internet_facing": false,
+    "attack_type": "RCE/AuthBypass/Injection",
+    "explanation": "Predicted KEV Risk Score 58.83/100: Ranked high because vendor 'ivanti' has 30 prior KEV entries before snapshot (12 tied to ransomware); description indicates unauthenticated + authentication bypass; public exploit artifacts exist (Nuclei template); EPSS v4 = 0.11742; description similarity 0.94 to prior KEV CVE-2024-7593."
+  },
+  "CVE-2026-43284": {
+    "vendor": "linux",
+    "product": "kernel",
+    "internet_facing": true,
+    "attack_type": "buffer overflow",
+    "explanation": "The Linux kernel's xfrm: esp module has a buffer overflow vulnerability due to the MSG_SPLICE_PAGES function attaching pages from a pipe directly to an skb. This can lead to shared skb fragments being modified, potentially causing data corruption or privilege escalation. The risk score is predicted to be 53.96/100, with a CVSS score of 8.8, indicating a high severity. The nearest prior known exploit (KEV) description match is CVE-2025-38352 with a similarity of 0.78. Exploits for this vulnerability are available in Metasploit and GitHub, but not in ExploitDB or Nuclei. [Verified Drivers: vendor 'linux' has 23 prior KEV entries before snapshot (2 tied to ransomware); public exploit artifacts exist (Metasploit module, GitHub PoC); EPSS v4 = 0.38453; vendor/CNA CVSS = 8.8; description similarity 0.78 to prior KEV CVE-2025-38352]"
+  },
+  "CVE-2025-67888": {
+    "vendor": "cwp",
+    "product": "Control Web Panel",
+    "internet_facing": true,
+    "attack_type": "OS Command Injection",
+    "explanation": "The Control Web Panel (CWP) before version 0.9.8.1209 has a vulnerability (CVE-2025-67888) where user input passed via the 'key' GET parameter to /admin/index.php (when the 'api' parameter is set) is not properly sanitized before being used to execute OS commands. This can be exploited by unauthenticated attackers to inject and execute arbitrary OS commands with the privileges of the application. The predicted risk score is 53.02/100, and the vendor has a history of similar vulnerabilities with a KEV count before snapshot of 2. The exploit has been flagged as Metasploit and GitHub_PoC available. [Verified Drivers: vendor 'cwp' has 2 prior KEV entries before snapshot; description indicates unauthenticated + remote code execution; public exploit artifacts exist (Metasploit module, GitHub PoC); EPSS v4 = 0.32388; vendor/CNA CVSS = 7.3; description similarity 0.87 to prior KEV CVE-2022-44877]"
   }
 }

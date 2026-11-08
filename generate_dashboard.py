@@ -105,6 +105,70 @@ def generate_html_dashboard(
     unpublished_json = json.dumps(unpublished)
     total_count = len(all_cves)
 
+    # Backtest panel values are read from backtest_results.json (never hardcoded)
+    bt = load_backtest_results()
+    bt_pool = int(bt.get("pool_2024_2025_size", 0))
+    bt_kev = int(bt.get("out_of_time_test_kev_total", 0))
+    bt_raw = bt.get("sum_raw_top500_caught", {})
+    bt_scaled = bt.get("sum_scaled_top500_caught", {})
+    methods = [
+        ("strict_no_cvss", "Strict No-CVSS Leak-Free Model (Ours)", "emerald"),
+        ("our_model", "Leak-Free GBDT + Readable Model (Ours)", "blue"),
+        ("readable_score", "Readable Leak-Free Formula Alone (Ours)", "purple"),
+        ("exploit_then_epss", "Baseline: Exploit-then-EPSS", "amber"),
+        ("epss_first", "Baseline: EPSS-First", "gray"),
+        ("cvss_first", "Baseline: CVSS-First", "rose"),
+    ]
+    max_raw = max([bt_raw.get(k, 0) for k, _, _ in methods] + [1])
+    bar_parts = []
+    for key, label, color in methods:
+        raw = int(bt_raw.get(key, 0))
+        scaled = int(bt_scaled.get(key, 0))
+        recall = (100.0 * raw / bt_kev) if bt_kev else 0.0
+        width = int(round(100.0 * raw / max_raw))
+        bar_parts.append(
+            f'<div><div class="flex justify-between text-[11px] mb-0.5">'
+            f'<span class="font-semibold text-{color}-300">{label}</span>'
+            f'<span class="font-mono text-{color}-300">{raw} / {bt_kev} caught ({recall:.1f}% recall | {scaled} scaled)</span></div>'
+            f'<div class="w-full bg-gray-800 h-2.5 rounded overflow-hidden">'
+            f'<div class="bg-{color}-500 h-2.5 rounded" style="width: {width}%"></div></div></div>'
+        )
+    bt_bars_html = (
+        '<div class="space-y-2 mb-4 bg-gray-950/70 p-3 rounded-lg border border-gray-800 text-xs">'
+        + "".join(bar_parts) + "</div>"
+    )
+
+    col_keys = ["cvss_first", "epss_first", "exploit_then_epss", "readable_score", "our_model", "strict_no_cvss"]
+    row_parts = []
+    tot_pool = 0
+    for p in bt.get("periods", []):
+        tot_pool += int(p.get("test_pool_size", 0))
+        cells = "".join(
+            f'<td class="text-center">{p["raw_top500_caught"].get(k, 0)} ({p["scaled_top500_caught"].get(k, 0)})</td>'
+            for k in col_keys
+        )
+        row_parts.append(
+            f'<tr><td class="py-1 px-2">{p.get("period", "")}</td>'
+            f'<td class="py-1 px-2 text-center">{int(p.get("test_pool_size", 0)):,} / {p.get("total_future_kev", 0)}</td>{cells}</tr>'
+        )
+    if row_parts:
+        tot_cells = "".join(
+            f'<td class="text-center">{bt_raw.get(k, 0)} ({bt_scaled.get(k, 0)})</td>' for k in col_keys
+        )
+        row_parts.append(
+            f'<tr class="bg-gray-800/70 font-bold"><td class="py-1.5 px-2">TOTAL</td>'
+            f'<td class="py-1.5 px-2 text-center">{tot_pool:,} / {bt_kev}</td>{tot_cells}</tr>'
+        )
+    bt_rows_html = "".join(row_parts) or '<tr><td colspan="8" class="py-2 text-center text-gray-500">No backtest results found.</td></tr>'
+
+    best_ours = int(bt_raw.get("strict_no_cvss", 0))
+    best_ours_pct = (100.0 * best_ours / bt_kev) if bt_kev else 0.0
+    kpi_recall = f"{best_ours_pct:.1f}% ({best_ours}/{bt_kev})"
+    kpi_recall_sub = (
+        f"vs Exploit+EPSS ({bt_raw.get('exploit_then_epss', 0)}), "
+        f"EPSS ({bt_raw.get('epss_first', 0)}), CVSS ({bt_raw.get('cvss_first', 0)})"
+    )
+
     html_content = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -165,46 +229,17 @@ def generate_html_dashboard(
         <div class="flex-1">
           <div class="flex items-center justify-between mb-2">
             <div>
-              <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Fix 2: Out-of-Time Backtest Proof</span>
-              <h2 class="text-sm font-bold text-white mt-1">2024–2025 Temporal Backtest: Future KEV Additions Caught in Top 500</h2>
+              <h2 class="text-sm font-bold text-white">2024–2025 Temporal Backtest: Future KEV Additions Caught in Top 500</h2>
             </div>
-            <span class="text-[11px] text-gray-400 font-mono">87,020 Historical CVEs | 91 Out-of-Time KEVs</span>
+            <span class="text-[11px] text-gray-400 font-mono">{bt_pool:,} Historical CVEs | {bt_kev} Out-of-Time KEVs</span>
           </div>
-          <p class="text-xs text-gray-400 mb-3">Trained strictly on older publication months and tested on newer unseen months (`in_kev == 0` at snapshot). Our Leak-Free GBDT+Readable Model and Strict No-CVSS variant beat all 3 baselines in every test period:</p>
-
-          <!-- Visual Bar Comparison (Sum of Per-Period Top-500 Catches out of 91 Future KEVs) -->
-          <div class="space-y-2 mb-4 bg-gray-950/70 p-3 rounded-lg border border-gray-800 text-xs">
-            <div>
-              <div class="flex justify-between text-[11px] mb-0.5"><span class="font-bold text-emerald-300">Strict No-CVSS Leak-Free Model (Ours)</span><span class="font-mono font-bold text-emerald-300">50 / 91 Caught (54.9% Recall | 32 Scaled)</span></div>
-              <div class="w-full bg-gray-800 h-2.5 rounded overflow-hidden"><div class="bg-emerald-500 h-2.5 rounded" style="width: 100%"></div></div>
-            </div>
-            <div>
-              <div class="flex justify-between text-[11px] mb-0.5"><span class="font-bold text-blue-300">Leak-Free GBDT + Readable Model (Ours, CNA CVSS)</span><span class="font-mono font-bold text-blue-300">48 / 91 Caught (52.7% Recall | 30 Scaled)</span></div>
-              <div class="w-full bg-gray-800 h-2.5 rounded overflow-hidden"><div class="bg-blue-500 h-2.5 rounded" style="width: 96%"></div></div>
-            </div>
-            <div>
-              <div class="flex justify-between text-[11px] mb-0.5"><span class="font-semibold text-purple-300">Readable Leak-Free Formula Alone (Ours)</span><span class="font-mono text-purple-300">39 / 91 Caught (42.9% Recall | 31 Scaled)</span></div>
-              <div class="w-full bg-gray-800 h-2.5 rounded overflow-hidden"><div class="bg-purple-500 h-2.5 rounded" style="width: 78%"></div></div>
-            </div>
-            <div>
-              <div class="flex justify-between text-[11px] mb-0.5"><span class="text-amber-300">Baseline 3: Exploit-then-EPSS</span><span class="font-mono text-amber-300">35 / 91 Caught (38.5% Recall | 23 Scaled)</span></div>
-              <div class="w-full bg-gray-800 h-2.5 rounded overflow-hidden"><div class="bg-amber-500/80 h-2.5 rounded" style="width: 70%"></div></div>
-            </div>
-            <div>
-              <div class="flex justify-between text-[11px] mb-0.5"><span class="text-gray-300">Baseline 2: EPSS-First</span><span class="font-mono text-gray-300">24 / 91 Caught (26.4% Recall | 15 Scaled)</span></div>
-              <div class="w-full bg-gray-800 h-2.5 rounded overflow-hidden"><div class="bg-gray-500 h-2.5 rounded" style="width: 48%"></div></div>
-            </div>
-            <div>
-              <div class="flex justify-between text-[11px] mb-0.5"><span class="text-rose-400">Baseline 1: CVSS-First</span><span class="font-mono text-rose-400">7 / 91 Caught (7.7% Recall | 4 Scaled)</span></div>
-              <div class="w-full bg-gray-800 h-2.5 rounded overflow-hidden"><div class="bg-rose-500/80 h-2.5 rounded" style="width: 14%"></div></div>
-            </div>
-          </div>
-
+          <p class="text-xs text-gray-400 mb-3">Each period is trained strictly on older months and tested on newer unseen months (<code>in_kev == 0</code> at snapshot). Values are loaded from <code>Granite_CVE_Analyzer/backtest_results.json</code>. Raw Top-500 catches shown first, scaled Top-K equivalent in parentheses.</p>
+          {bt_bars_html}
           <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse text-[11px]">
               <thead class="bg-gray-800/90 text-gray-300 uppercase">
                 <tr>
-                  <th class="py-1.5 px-2">Test Period (Train &rarr; Test)</th>
+                  <th class="py-1.5 px-2">Test Period</th>
                   <th class="py-1.5 px-2 text-center">Pool / KEVs</th>
                   <th class="py-1.5 px-2 text-center text-rose-300">CVSS-1st</th>
                   <th class="py-1.5 px-2 text-center text-gray-300">EPSS-1st</th>
@@ -215,12 +250,7 @@ def generate_html_dashboard(
                 </tr>
               </thead>
               <tbody class="divide-y divide-gray-800 font-mono text-gray-300">
-                <tr><td class="py-1 px-2">2024-Q3 (Train Jan–Jun 24)</td><td class="py-1 px-2 text-center">8,440 / 18</td><td class="text-center">0 (0)</td><td class="text-center">3 (2)</td><td class="text-center">6 (3)</td><td class="text-center">8 (6)</td><td class="text-center font-bold text-blue-300">9 (4)</td><td class="text-center font-bold text-emerald-300">11 (4)</td></tr>
-                <tr><td class="py-1 px-2">2024-Q4 (Train Jan–Sep 24)</td><td class="py-1 px-2 text-center">11,000 / 21</td><td class="text-center">0 (0)</td><td class="text-center">2 (2)</td><td class="text-center">5 (3)</td><td class="text-center">5 (5)</td><td class="text-center font-bold text-blue-300">7 (5)</td><td class="text-center font-bold text-emerald-300">7 (5)</td></tr>
-                <tr><td class="py-1 px-2">2025-Q1 (EPSS v4 Shift)</td><td class="py-1 px-2 text-center">12,139 / 18</td><td class="text-center">3 (1)</td><td class="text-center">7 (3)</td><td class="text-center">6 (3)</td><td class="text-center">7 (5)</td><td class="text-center font-bold text-blue-300">13 (5)</td><td class="text-center font-bold text-emerald-300">13 (5)</td></tr>
-                <tr><td class="py-1 px-2">2025-Q2 (Post-v4 Regime)</td><td class="py-1 px-2 text-center">11,942 / 17</td><td class="text-center">2 (2)</td><td class="text-center">9 (6)</td><td class="text-center">12 (9)</td><td class="text-center">12 (10)</td><td class="text-center font-bold text-blue-300">12 (10)</td><td class="text-center font-bold text-emerald-300">12 (11)</td></tr>
-                <tr><td class="py-1 px-2">2025-H2 (Jul–Dec 2025)</td><td class="py-1 px-2 text-center">23,688 / 17</td><td class="text-center">2 (1)</td><td class="text-center">3 (2)</td><td class="text-center">6 (5)</td><td class="text-center">7 (5)</td><td class="text-center font-bold text-blue-300">7 (6)</td><td class="text-center font-bold text-emerald-300">7 (7)</td></tr>
-                <tr class="bg-gray-800/70 font-bold"><td class="py-1.5 px-2">TOTAL (Raw Top-500 / Scaled)</td><td class="py-1.5 px-2 text-center">67,209 / 91</td><td class="text-center text-rose-400">7 (4)</td><td class="text-center">24 (15)</td><td class="text-center text-amber-300">35 (23)</td><td class="text-center text-purple-300">39 (31)</td><td class="text-center text-blue-300">48 (30)</td><td class="text-center text-emerald-300">50 (32)</td></tr>
+                {bt_rows_html}
               </tbody>
             </table>
           </div>
@@ -229,8 +259,7 @@ def generate_html_dashboard(
         <!-- Right: Safe vs Unsafe Columns Audit -->
         <div class="lg:w-[440px] flex flex-col justify-between bg-gray-950/60 p-3.5 rounded-lg border border-gray-800">
           <div>
-            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-blue-500/20 text-blue-300 border border-blue-500/30">Fix 1: Data Leakage Audit</span>
-            <h3 class="text-sm font-bold text-white mt-1 mb-2">Columns Used &amp; Why (Safe vs. Unsafe)</h3>
+            <h3 class="text-sm font-bold text-white mb-2">Columns Used &amp; Why (Safe vs. Unsafe)</h3>
             <div class="space-y-2 text-[11px]">
               <div class="p-2 rounded bg-emerald-950/30 border border-emerald-800/40">
                 <div class="font-bold text-emerald-300">SAFE (Used in Model):</div>
@@ -296,8 +325,8 @@ def generate_html_dashboard(
       </div>
       <div class="p-4 rounded-xl bg-gray-900/80 border border-gray-800 shadow-sm">
         <div class="text-xs font-medium text-gray-400 uppercase tracking-wider">Out-of-Time KEV Recall</div>
-        <div class="text-2xl font-bold text-emerald-400 mt-1" id="stat-active-rate">54.9% (50/91)</div>
-        <div class="text-xs text-gray-400 mt-1">Beats Exploit+EPSS (35), EPSS (24), CVSS (7)</div>
+        <div class="text-2xl font-bold text-emerald-400 mt-1" id="stat-active-rate">{kpi_recall}</div>
+        <div class="text-xs text-gray-400 mt-1">{kpi_recall_sub}</div>
       </div>
       <div class="p-4 rounded-xl bg-gray-900/80 border border-gray-800 shadow-sm">
         <div class="text-xs font-medium text-gray-400 uppercase tracking-wider">Prior-KEV Vendor Signal</div>
@@ -311,14 +340,8 @@ def generate_html_dashboard(
       </div>
     </div>
 
-    <!-- Navigation Tabs & Search Controls -->
-    <div class="mt-6 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gray-900/70 p-3 rounded-xl border border-gray-800">
-      <div class="flex items-center gap-2 overflow-x-auto">
-        <button id="tab-all" onclick="setTab('all')" class="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-blue-600 text-white transition">All Assessed CVEs</button>
-        <button id="tab-exploit" onclick="setTab('exploit')" class="px-3.5 py-1.5 text-xs font-medium rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition">Exploitation Likelihood Focus</button>
-        <button id="tab-surface" onclick="setTab('surface')" class="px-3.5 py-1.5 text-xs font-medium rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition">Vendor Prior-KEV &amp; Edge Surface</button>
-        <button id="tab-unpub" onclick="setTab('unpub')" class="px-3.5 py-1.5 text-xs font-medium rounded-lg text-purple-400 hover:bg-purple-950/40 border border-purple-800/40 transition">Zero-EPSS &amp; CNA-Unscored Vulns</button>
-      </div>
+    <!-- Search & Sort Controls -->
+    <div class="mt-6 flex flex-col md:flex-row md:items-center justify-end gap-4 bg-gray-900/70 p-3 rounded-xl border border-gray-800">
       <div class="flex items-center gap-3">
         <input type="text" id="searchInput" oninput="onSearchChange()" placeholder="Search CVE, Vendor, Product, CWE..." class="w-full md:w-64 px-3 py-1.5 text-xs rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500">
         <select id="sortSelect" onchange="onSortChange()" class="px-3 py-1.5 text-xs rounded-lg bg-gray-800 border border-gray-700 text-gray-300 focus:outline-none">
@@ -326,7 +349,13 @@ def generate_html_dashboard(
           <option value="epss">Sort by EPSS Likelihood</option>
           <option value="ams">Sort by Vendor Prior KEV Count</option>
           <option value="cvss">Sort by CNA CVSS Score</option>
+          <option value="rank">Sort by Rank</option>
+          <option value="cve">Sort by CVE ID</option>
+          <option value="date">Sort by Effective Date</option>
         </select>
+        <button id="sortDirBtn" onclick="toggleSortDir()" title="Toggle ascending / descending" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-200 transition whitespace-nowrap">
+          &darr; Descending
+        </button>
       </div>
     </div>
 
@@ -399,8 +428,9 @@ def generate_html_dashboard(
     const allCVEsData = {all_cves_json};
     const unpublishedData = {unpublished_json};
 
-    let currentTab = 'all';
+    const currentTab = 'all';
     let epssFilter = 'all';
+    let sortDir = 'desc';
     let currentPage = 1;
     let pageSize = 50;
     let filteredList = [];
@@ -441,39 +471,26 @@ def generate_html_dashboard(
       applyFiltersAndSort();
     }}
 
-    function setTab(tab) {{
-      currentTab = tab;
-      ['all', 'exploit', 'surface', 'unpub'].forEach(t => {{
-        const btn = document.getElementById('tab-' + t);
-        if (t === tab) {{
-          btn.className = 'px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-blue-600 text-white transition';
-        }} else {{
-          btn.className = 'px-3.5 py-1.5 text-xs font-medium rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition';
-        }}
-      }});
-
-      const notice = document.getElementById('sectionNoticeText');
-      if (tab === 'all') {{
-        notice.innerText = '| Full dataset universe assessed.';
-      }} else if (tab === 'exploit') {{
-        notice.innerText = '| High Likelihood Focus (EPSS v4 Active & Weaponized).';
-      }} else if (tab === 'surface') {{
-        notice.innerText = '| Attack Surface Focus (Attack Matrix Size & Multi-Product Footprint).';
-      }} else if (tab === 'unpub') {{
-        notice.innerHTML = '| <span class="text-purple-400 font-semibold">[UNPUBLISHED SECTION]</span> NVD Deferred & Awaiting Analysis.';
-      }}
-
-      currentPage = 1;
-      updateFilterCounts();
-      applyFiltersAndSort();
-    }}
-
     function onSearchChange() {{
       currentPage = 1;
       applyFiltersAndSort();
     }}
 
     function onSortChange() {{
+      // Text-like fields default to ascending; numeric risk fields default to descending
+      const sort = document.getElementById('sortSelect').value;
+      setSortDir((sort === 'rank' || sort === 'cve') ? 'asc' : 'desc');
+    }}
+
+    function toggleSortDir() {{
+      setSortDir(sortDir === 'desc' ? 'asc' : 'desc');
+    }}
+
+    function setSortDir(dir) {{
+      sortDir = dir;
+      const btn = document.getElementById('sortDirBtn');
+      btn.innerHTML = (dir === 'asc') ? '&uarr; Ascending' : '&darr; Descending';
+      currentPage = 1;
       applyFiltersAndSort();
     }}
 
@@ -507,13 +524,6 @@ def generate_html_dashboard(
         source = source.filter(x => x[6] === 0 || (x[7] && x[7].includes('No information')));
       }}
 
-      // Tab Filters
-      if (currentTab === 'exploit') {{
-        source = source.filter(x => x[6] > 0.05);
-      }} else if (currentTab === 'surface') {{
-        source = source.filter(x => x[8] > 6.0);
-      }}
-
       // Search Query
       if (q) {{
         source = source.filter(x => {{
@@ -525,12 +535,19 @@ def generate_html_dashboard(
         }});
       }}
 
-      // Sort
+      // Sort (direction controlled by the Ascending / Descending toggle)
+      const dirMul = (sortDir === 'asc') ? 1 : -1;
       source.sort((a, b) => {{
-        if (sort === 'epss') return b[6] - a[6];
-        if (sort === 'ams') return b[8] - a[8];
-        if (sort === 'cvss') return b[3] - a[3];
-        return b[2] - a[2]; // composite
+        let cmp;
+        if (sort === 'epss') cmp = a[6] - b[6];
+        else if (sort === 'ams') cmp = a[8] - b[8];
+        else if (sort === 'cvss') cmp = a[3] - b[3];
+        else if (sort === 'rank') cmp = a[0] - b[0];
+        else if (sort === 'cve') cmp = String(a[1]).localeCompare(String(b[1]), undefined, {{ numeric: true }});
+        else if (sort === 'date') cmp = String(a[15] || '').localeCompare(String(b[15] || ''));
+        else cmp = a[2] - b[2]; // composite
+        // Stable tie-break on model rank so equal values keep a predictable order
+        return (cmp * dirMul) || (a[0] - b[0]);
       }});
 
       filteredList = source;

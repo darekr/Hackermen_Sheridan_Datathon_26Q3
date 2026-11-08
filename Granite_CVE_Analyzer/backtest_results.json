@@ -14,7 +14,7 @@
         "cvss_first": 0,
         "epss_first": 2,
         "exploit_then_epss": 3,
-        "readable_score": 6,
+        "readable_score": 5,
         "our_model": 4,
         "strict_no_cvss": 4
       },
@@ -24,7 +24,7 @@
         "exploit_then_epss": 6,
         "readable_score": 8,
         "our_model": 9,
-        "strict_no_cvss": 11
+        "strict_no_cvss": 9
       }
     },
     {
@@ -37,7 +37,7 @@
         "cvss_first": 0,
         "epss_first": 2,
         "exploit_then_epss": 3,
-        "readable_score": 5,
+        "readable_score": 3,
         "our_model": 5,
         "strict_no_cvss": 5
       },
@@ -60,7 +60,7 @@
         "cvss_first": 1,
         "epss_first": 3,
         "exploit_then_epss": 3,
-        "readable_score": 5,
+        "readable_score": 4,
         "our_model": 5,
         "strict_no_cvss": 5
       },
@@ -108,7 +108,7 @@
         "exploit_then_epss": 5,
         "readable_score": 5,
         "our_model": 6,
-        "strict_no_cvss": 7
+        "strict_no_cvss": 6
       },
       "raw_top500_caught": {
         "cvss_first": 2,
@@ -124,9 +124,9 @@
     "cvss_first": 4,
     "epss_first": 15,
     "exploit_then_epss": 23,
-    "readable_score": 31,
+    "readable_score": 27,
     "our_model": 30,
-    "strict_no_cvss": 32
+    "strict_no_cvss": 31
   },
   "sum_raw_top500_caught": {
     "cvss_first": 7,
@@ -134,15 +134,15 @@
     "exploit_then_epss": 35,
     "readable_score": 39,
     "our_model": 48,
-    "strict_no_cvss": 50
+    "strict_no_cvss": 48
   },
   "pooled_top500_caught": {
     "cvss_first": 4,
     "epss_first": 14,
     "exploit_then_epss": 24,
-    "readable_score": 30,
-    "our_model": 29,
-    "strict_no_cvss": 30
+    "readable_score": 29,
+    "our_model": 28,
+    "strict_no_cvss": 28
   },
   "feature_correlations_with_future_kev": {
     "nuclei": 0.1288,
@@ -161,5 +161,5 @@
     "edge_x_unauth_or_rce": 0.0291,
     "atk_auth_bypass": 0.0254
   },
-  "elapsed_seconds": 730.64
+  "elapsed_seconds": 200.5
 }
