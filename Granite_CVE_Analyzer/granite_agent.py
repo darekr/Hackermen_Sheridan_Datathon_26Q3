@@ -359,12 +359,13 @@ Assess the real-world attack plane for:
 
         # Sort descending by composite score
         scored_candidates.sort(key=lambda x: x["composite_score"], reverse=True)
-        top500 = scored_candidates[:500]
-        print(f"[+] Ranked top 500 candidates. Top composite score: {top500[0]['composite_score']}")
+        total_cves = len(scored_candidates)
+        print(f"[+] Ranked all {total_cves} candidates across the dataset. Top composite score: {scored_candidates[0]['composite_score']}")
 
         # Step 4: Use IBM Granite to generate deep attack plane evaluations for top samples
-        print(f"[*] Querying IBM Granite ({self.model_name}) for deep attack plane analysis...")
-        for i, item in enumerate(top500):
+        # and assign ranks & syntheses for all CVEs
+        print(f"[*] Querying IBM Granite ({self.model_name}) for deep attack plane analysis on top candidates...")
+        for i, item in enumerate(scored_candidates):
             item["rank"] = i + 1
             if i < llm_sample_count:
                 print(f"    -> Evaluating Rank {i+1} [{item['cve_id']}] via Granite 4...")
@@ -381,14 +382,14 @@ Assess the real-world attack plane for:
                 )
                 item["granite_attack_plane_assessment"] = assessment
             else:
-                # Deterministic synthesis for subsequent ranks
+                # Deterministic synthesis for subsequent ranks across the entire dataset
                 item["granite_attack_plane_assessment"] = (
                     f"Real-world attack plane spans {item['attack_plane_scope']} across "
                     f"{item['affected_products_count']} products ({item['sample_affected_vendors']}). "
                     f"Threat severity driven by CVSS {item['cvss3_score']} with {item['epss_status']} (EPSS: {item['raw_epss']})."
                 )
 
-        # Step 5: Write top500.csv
+        # Step 5: Write all_cves_assessed.csv (All CVEs) and top500.csv (Top 500)
         fieldnames = [
             "rank",
             "cve_id",
@@ -414,32 +415,44 @@ Assess the real-world attack plane for:
             "granite_attack_plane_assessment"
         ]
 
-        out_path = os.path.abspath(output_file)
-        with open(out_path, "w", encoding="utf-8", newline="") as f:
+        # Write ALL assessed CVEs
+        all_path = os.path.abspath(output_file)
+        with open(all_path, "w", encoding="utf-8", newline="") as f:
             writer = csv.DictWriter(f, fieldnames=fieldnames, extrasaction="ignore")
             writer.writeheader()
-            for row in top500:
+            for row in scored_candidates:
                 writer.writerow(row)
+        print(f"[+] Successfully generated ALL assessed CVEs: {all_path} ({total_cves} records)")
 
-        print(f"[+] Successfully generated: {out_path} ({len(top500)} records)")
-        return out_path
+        # Write top500.csv slice
+        top500_path = os.path.abspath("top500.csv")
+        with open(top500_path, "w", encoding="utf-8", newline="") as f:
+            writer = csv.DictWriter(f, fieldnames=fieldnames, extrasaction="ignore")
+            writer.writeheader()
+            for row in scored_candidates[:500]:
+                writer.writerow(row)
+        print(f"[+] Successfully updated top 500 slice: {top500_path} (500 records)")
+
+        return all_path
 
 
 def main():
     import argparse
-    parser = argparse.ArgumentParser(description="Granite Security Scoring Agent")
+    parser = argparse.ArgumentParser(description="Granite Security Scoring Agent - Full Dataset Vulnerability Assessment")
     parser.add_argument("--model", default="granite4:3b", choices=["granite4:3b", "granite-code:3b"], help="IBM Granite model")
-    parser.add_argument("--generate-top500", action="store_true", help="Generate top500.csv")
-    parser.add_argument("--output", default="top500.csv", help="Output path for top500.csv")
+    parser.add_argument("--assess-all", action="store_true", default=True, help="Assess all CVEs across the dataset (default: True)")
+    parser.add_argument("--output", default="all_cves_assessed.csv", help="Output path for assessed CVEs (default: all_cves_assessed.csv)")
     parser.add_argument("--cve", help="Score a specific CVE")
     args = parser.parse_args()
 
     agent = GraniteScoringAgent(model_name=args.model)
 
-    if args.generate_top500 or (not args.cve and not args.generate_top500):
-        agent.generate_top500(output_file=args.output)
-    elif args.cve:
+    if args.cve:
         print(f"Scoring {args.cve}...")
+        res = agent.lookup_cve(args.cve)
+        print(json.dumps(res, indent=2))
+    else:
+        agent.generate_top500(output_file=args.output)
 
 
 if __name__ == "__main__":

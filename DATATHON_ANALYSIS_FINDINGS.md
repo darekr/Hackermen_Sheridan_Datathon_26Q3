@@ -99,3 +99,4 @@ Our cross-correlation between `vulnerabilities.csv` and `scoreboard_2026.csv` su
 1. **Prioritize Edge Infrastructure & Command Injection**: Vulnerabilities with `CWE-77/78` and EPSS > 0.5 (such as `CVE-2026-8037`) should be patched within 24 hours.
 2. **Automate Version-Weighted EPSS in SIEM Pipelines**: Use the `epss_weighting` module to prevent older EPSS scores from polluting modern vulnerability risk rankings.
 3. **Monitor the Pre-Analysis Pool**: Ingest NVD `Deferred` entries with high EPSS directly into threat hunting routines.
+
