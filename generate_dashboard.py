@@ -292,9 +292,11 @@ def generate_html_dashboard(
       </div>
       <div class="flex items-center gap-3">
         <div class="flex items-center gap-1.5">
-          <span>Rows:</span>
-          <select id="pageSizeSelect" onchange="changePageSize(this.value)" class="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-gray-200 text-xs">
-            <option value="50">50</option>
+          <span>Rows per page:</span>
+          <select id="pageSizeSelect" onchange="changePageSize(this.value)" class="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-gray-200 text-xs focus:outline-none focus:border-blue-500">
+            <option value="10">10</option>
+            <option value="25">25</option>
+            <option value="50" selected>50</option>
             <option value="100">100</option>
             <option value="250">250</option>
             <option value="500">500</option>
@@ -529,6 +531,86 @@ def generate_html_dashboard(
 
       const isUnpub = (currentTab === 'unpub');
       const pageSlice = filteredList.slice(startIdx, endIdx);
+
+      // Compute Section Averages for the current visible section/page
+      let sumScore = 0, sumCvss = 0, sumEpss = 0, sumAms = 0, sumVendors = 0, sumProducts = 0;
+      const cweMap = {{}}, vendorMap = {{}};
+
+      pageSlice.forEach(row => {{
+        sumScore += (row[2] || 0);
+        sumCvss += (row[3] || 0);
+        sumEpss += (row[6] || 0);
+        sumAms += (row[8] || 0);
+        sumVendors += (row[11] || 0);
+        sumProducts += (row[12] || 0);
+
+        const cwe = row[9] || 'N/A';
+        cweMap[cwe] = (cweMap[cwe] || 0) + 1;
+
+        if (row[13] && row[13] !== 'Not Specified' && row[13] !== 'Pre-disclosure / Unlisted') {{
+          const firstV = row[13].split(';')[0].trim();
+          if (firstV) vendorMap[firstV] = (vendorMap[firstV] || 0) + 1;
+        }}
+      }});
+
+      const count = pageSlice.length || 1;
+      const avgScore = (sumScore / count).toFixed(2);
+      const avgCvss = (sumCvss / count).toFixed(2);
+      const avgEpss = (sumEpss / count).toFixed(5);
+      const avgAms = (sumAms / count).toFixed(2);
+      const avgVendors = (sumVendors / count).toFixed(1);
+      const avgProducts = (sumProducts / count).toFixed(1);
+
+      let topCwe = '—', maxCwe = 0;
+      for (const [k, v] of Object.entries(cweMap)) {{
+        if (v > maxCwe && k !== 'NVD-CWE-noinfo') {{ maxCwe = v; topCwe = k; }}
+      }}
+      let topVendor = '—', maxV = 0;
+      for (const [k, v] of Object.entries(vendorMap)) {{
+        if (v > maxV) {{ maxV = v; topVendor = k; }}
+      }}
+
+      // Add Section Average Header Row heading this section in the table
+      const avgRow = document.createElement('tr');
+      avgRow.className = 'bg-gradient-to-r from-blue-950/90 via-blue-900/60 to-purple-950/80 border-b-2 border-blue-500/80 text-blue-100 font-semibold text-xs shadow-md sticky top-[37px] z-[9]';
+      avgRow.innerHTML = `
+        <td class="py-2.5 px-3 font-mono font-bold text-blue-300">AVG</td>
+        <td class="py-2.5 px-3">
+          <div class="font-bold text-white tracking-wide flex items-center gap-1.5">
+            <span>SECTION AVERAGES</span>
+            <span class="text-[9px] px-1.5 py-0.2 rounded bg-blue-500/20 text-blue-300 border border-blue-500/40 font-mono">PAGE HEAD</span>
+          </div>
+          <div class="text-[10px] text-blue-300 font-normal">Mean metrics across ${{count}} visible vulnerabilities</div>
+        </td>
+        <td class="py-2.5 px-3 text-gray-400 font-mono text-[11px]">—</td>
+        <td class="py-2.5 px-3">
+          <div class="flex items-center gap-1.5">
+            <span class="text-sm font-bold text-white">${{avgScore}}</span>
+            <span class="text-[10px] px-1 py-0.2 rounded bg-blue-800/80 text-blue-200">AVG</span>
+          </div>
+          <div class="text-[10px] text-blue-300 font-medium">CVSS Mean: ${{avgCvss}}</div>
+        </td>
+        <td class="py-2.5 px-3">
+          <div class="text-sm font-mono font-bold text-amber-300">${{avgEpss}}</div>
+          <div class="text-[10px] text-emerald-300 font-medium">Mean EPSS Likelihood</div>
+        </td>
+        <td class="py-2.5 px-3">
+          <div class="text-sm font-mono font-bold text-purple-300">${{avgAms}}</div>
+          <div class="text-[10px] text-gray-300 font-medium">Avg ${{avgVendors}} Ven / ${{avgProducts}} Prod</div>
+        </td>
+        <td class="py-2.5 px-3">
+          <div class="text-gray-200 font-medium font-mono">${{topCwe}}</div>
+          <div class="text-[10px] text-blue-300">Leading weakness</div>
+        </td>
+        <td class="py-2.5 px-3">
+          <div class="text-gray-200 font-medium truncate max-w-[170px]">${{topVendor}}</div>
+          <div class="text-[10px] text-gray-400">Leading affected vendor</div>
+        </td>
+        <td class="py-2.5 px-3 text-right">
+          <span class="text-[10px] text-blue-300/80 font-mono">Summary</span>
+        </td>
+      `;
+      tbody.appendChild(avgRow);
 
       pageSlice.forEach((row, i) => {{
         const tr = document.createElement('tr');
